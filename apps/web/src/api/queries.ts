@@ -1,4 +1,5 @@
 import type {
+  CalendarMonthResponse,
   CreateMilestoneRequest,
   CreateGroupRequest,
   Group,
@@ -7,6 +8,7 @@ import type {
   ReorderMilestonesRequest,
   UpdateMilestoneRequest,
   UpdateGroupRequest,
+  WeekStart,
 } from "@timemagic/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -45,6 +47,23 @@ export function useMilestones(filters: MilestoneFilters = {}) {
         `/milestones${query ? `?${query}` : ""}`,
       ),
     queryKey: ["milestones", filters],
+  });
+}
+
+export function useCalendar(
+  year: number,
+  month: number,
+  weekStart: WeekStart,
+  groupIds: string[],
+) {
+  const params = new URLSearchParams({ weekStart });
+  groupIds.forEach((groupId) => params.append("groupId", groupId));
+  return useQuery({
+    queryFn: () =>
+      apiRequest<CalendarMonthResponse>(
+        `/calendar/${year}/${month}?${params.toString()}`,
+      ),
+    queryKey: ["calendar", year, month, weekStart, groupIds],
   });
 }
 
@@ -119,7 +138,10 @@ export function useCreateMilestone() {
         method: "POST",
       }),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["milestones"] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["milestones"] }),
+        queryClient.invalidateQueries({ queryKey: ["calendar"] }),
+      ]);
     },
   });
 }
@@ -133,7 +155,10 @@ export function useUpdateMilestone(milestoneId: string) {
         method: "PATCH",
       }),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["milestones"] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["milestones"] }),
+        queryClient.invalidateQueries({ queryKey: ["calendar"] }),
+      ]);
     },
   });
 }

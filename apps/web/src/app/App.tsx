@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { LocalDate } from "@timemagic/shared";
 import {
   ChevronLeft,
   ChevronRight,
@@ -8,6 +9,7 @@ import {
 } from "lucide-react";
 
 import { useGroups, useMilestones } from "../api/queries.js";
+import { CalendarView } from "../calendar/CalendarView.js";
 import { IconButton } from "../components/IconButton.js";
 import { SegmentedControl } from "../components/SegmentedControl.js";
 import { GroupDetails } from "../groups/GroupDetails.js";
@@ -17,6 +19,7 @@ import { TimelineView } from "../timeline/TimelineView.js";
 import "./app.css";
 
 type MobilePane = "projects" | "timeline" | "details";
+type PrimaryView = "timeline" | "calendar";
 
 function localToday() {
   const now = new Date();
@@ -34,11 +37,13 @@ export function App() {
   });
   const [leftCollapsed, setLeftCollapsed] = useState(false);
   const [rightCollapsed, setRightCollapsed] = useState(false);
+  const [primaryView, setPrimaryView] = useState<PrimaryView>("timeline");
   const [mobilePane, setMobilePane] = useState<MobilePane>("timeline");
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [selectedMilestoneId, setSelectedMilestoneId] = useState<string | null>(
     null,
   );
+  const [selectedDate, setSelectedDate] = useState<LocalDate | null>(null);
   const [visibleGroupIds, setVisibleGroupIds] = useState<string[] | null>(null);
   const allGroupIds = groups.data?.items.map(({ id }) => id) ?? [];
   const effectiveVisibleGroupIds = visibleGroupIds ?? allGroupIds;
@@ -63,12 +68,12 @@ export function App() {
           <span>TimeMagic</span>
         </div>
         <SegmentedControl
-          activeId="timeline"
+          activeId={primaryView}
           label="Primary view"
-          onChange={() => undefined}
+          onChange={(id) => setPrimaryView(id as PrimaryView)}
           segments={[
             { id: "timeline", label: "Timeline" },
-            { disabled: true, id: "calendar", label: "Calendar" },
+            { id: "calendar", label: "Calendar" },
           ]}
         />
       </header>
@@ -105,7 +110,10 @@ export function App() {
           )}
         </nav>
 
-        <main aria-label="Timeline" className="mainPane">
+        <main
+          aria-label={primaryView === "timeline" ? "Timeline" : "Calendar"}
+          className="mainPane"
+        >
           <div className="mainToolbar">
             {leftCollapsed ? (
               <IconButton
@@ -118,7 +126,9 @@ export function App() {
             )}
             <div className="viewTitle">
               <span className="eyebrow">From today</span>
-              <h1>Timeline</h1>
+              <h1>
+                {primaryView === "timeline" ? "Timeline" : "Calendar"}
+              </h1>
             </div>
             {rightCollapsed ? (
               <IconButton
@@ -131,16 +141,32 @@ export function App() {
             )}
           </div>
 
-          <TimelineView
-            groups={groups.data?.items ?? []}
-            onSelect={(milestoneId) => {
-              setSelectedGroupId(null);
-              setSelectedMilestoneId(milestoneId);
-              setMobilePane("details");
-            }}
-            today={localToday()}
-            visibleGroupIds={effectiveVisibleGroupIds}
-          />
+          {primaryView === "timeline" ? (
+            <TimelineView
+              groups={groups.data?.items ?? []}
+              onSelect={(milestoneId) => {
+                setSelectedDate(null);
+                setSelectedGroupId(null);
+                setSelectedMilestoneId(milestoneId);
+                setMobilePane("details");
+              }}
+              today={localToday()}
+              visibleGroupIds={effectiveVisibleGroupIds}
+            />
+          ) : (
+            <CalendarView
+              groups={groups.data?.items ?? []}
+              onSelectDate={(date) => {
+                setSelectedDate(date);
+                setSelectedGroupId(null);
+                setSelectedMilestoneId(null);
+                setMobilePane("details");
+              }}
+              selectedDate={selectedDate}
+              today={localToday()}
+              visibleGroupIds={effectiveVisibleGroupIds}
+            />
+          )}
         </main>
 
         <aside aria-label="Details" className="pane detailsPane">
@@ -162,6 +188,10 @@ export function App() {
             />
           ) : selectedGroup ? (
             <GroupDetails group={selectedGroup} />
+          ) : selectedDate ? (
+            <div className="emptyState">
+              <p>{selectedDate}</p>
+            </div>
           ) : (
             <div className="emptyState">
               <p>Select a project or milestone.</p>
@@ -183,7 +213,7 @@ export function App() {
           onClick={() => setMobilePane("timeline")}
           type="button"
         >
-          Timeline
+          {primaryView === "timeline" ? "Timeline" : "Calendar"}
         </button>
         <button
           aria-pressed={mobilePane === "details"}

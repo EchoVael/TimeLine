@@ -1,4 +1,5 @@
 import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 import { App } from "./App.js";
@@ -14,12 +15,28 @@ vi.mock("../api/queries.js", () => ({
     isLoading: false,
   }),
   useCreateMilestone: () => ({ isPending: false, mutateAsync: vi.fn() }),
+  useCalendar: () => ({
+    data: {
+      days: Array.from({ length: 42 }, (_, index) => ({
+        date: `2026-06-${String(index + 1).padStart(2, "0")}`,
+        firstMilestoneTitle: null,
+        groupIds: [],
+        hasDailyNote: false,
+        milestoneCount: 0,
+        overflowCount: 0,
+      })),
+      month: 6,
+      year: 2026,
+    },
+    isLoading: false,
+  }),
   useReorderMilestones: () => ({ mutateAsync: vi.fn() }),
   useReorderGroups: () => ({ mutateAsync: vi.fn() }),
 }));
 
 describe("App", () => {
-  it("renders the three-pane workspace and view switcher", () => {
+  it("renders the three-pane workspace and switches primary views", async () => {
+    const user = userEvent.setup();
     render(<App />);
 
     expect(
@@ -40,9 +57,13 @@ describe("App", () => {
         pressed: true,
       }),
     ).toBeTruthy();
-    expect(within(viewSwitcher).getByRole("button", { name: "Calendar" })).toHaveProperty(
-      "disabled",
-      true,
-    );
+    const calendarButton = within(viewSwitcher).getByRole("button", {
+      name: "Calendar",
+    });
+    expect(calendarButton).not.toHaveProperty("disabled", true);
+    await user.click(calendarButton);
+    expect(
+      screen.getByRole("main", { name: "Calendar" }),
+    ).toBeTruthy();
   });
 });
