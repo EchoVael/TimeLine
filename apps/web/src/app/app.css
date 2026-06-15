@@ -1,0 +1,360 @@
+:root {
+  color: #202624;
+  background: #f4f6f5;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  --accent: #177d67;
+  --accent-strong: #0f6251;
+  --border: #d9dfdc;
+  --muted: #68736e;
+  --surface: #ffffff;
+  --surface-subtle: #f7f9f8;
+  --focus: #1769aa;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100dvh;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.appShell {
+  display: grid;
+  grid-template-rows: 52px minmax(0, 1fr);
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.brandMark {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  border-radius: 5px;
+  color: white;
+  background: var(--accent);
+}
+
+.segmentedControl {
+  display: grid;
+  grid-auto-flow: column;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-subtle);
+}
+
+.segmentedControl button {
+  min-width: 82px;
+  min-height: 30px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 4px;
+  color: var(--muted);
+  background: transparent;
+}
+
+.segmentedControl button[aria-pressed="true"] {
+  color: #18211e;
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgb(24 33 30 / 10%);
+}
+
+.segmentedControl button:disabled {
+  opacity: 0.45;
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: 246px minmax(420px, 1fr) 330px;
+  min-height: 0;
+}
+
+.appShell[data-left-collapsed="true"] .workspace {
+  grid-template-columns: 0 minmax(420px, 1fr) 330px;
+}
+
+.appShell[data-right-collapsed="true"] .workspace {
+  grid-template-columns: 246px minmax(420px, 1fr) 0;
+}
+
+.appShell[data-left-collapsed="true"][data-right-collapsed="true"] .workspace {
+  grid-template-columns: 0 minmax(420px, 1fr) 0;
+}
+
+.pane,
+.mainPane {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.pane {
+  background: var(--surface);
+}
+
+.projectsPane {
+  border-right: 1px solid var(--border);
+}
+
+.detailsPane {
+  border-left: 1px solid var(--border);
+}
+
+.appShell[data-left-collapsed="true"] .projectsPane,
+.appShell[data-right-collapsed="true"] .detailsPane {
+  visibility: hidden;
+}
+
+.paneHeader,
+.mainToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 64px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.paneHeader > div,
+.viewTitle {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.paneHeader strong {
+  overflow: hidden;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.eyebrow {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 650;
+  text-transform: uppercase;
+}
+
+.mainPane {
+  display: grid;
+  grid-template-rows: 64px minmax(0, 1fr);
+  background: var(--surface-subtle);
+}
+
+.mainToolbar {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) 36px;
+  background: var(--surface);
+}
+
+.viewTitle {
+  text-align: center;
+}
+
+.viewTitle h1 {
+  margin: 0;
+  font-size: 18px;
+  letter-spacing: 0;
+}
+
+.iconButton {
+  display: inline-grid;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  color: var(--muted);
+  background: transparent;
+}
+
+.iconButton:hover {
+  color: #1f2925;
+  border-color: var(--border);
+  background: var(--surface-subtle);
+}
+
+.timelineCanvas {
+  position: relative;
+  overflow: auto;
+  padding: 20px clamp(16px, 4vw, 48px) 48px;
+}
+
+.todayMarker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--accent-strong);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.todayMarker::after {
+  height: 1px;
+  flex: 1;
+  content: "";
+  background: #9cc8bd;
+}
+
+.emptyState {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  padding: 28px 18px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.emptyState p {
+  max-width: 28ch;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.emptyState--large {
+  min-height: 240px;
+  align-content: center;
+}
+
+.mobileNav {
+  display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color: #e8eeeb;
+    background: #171b19;
+    --accent: #4fb99f;
+    --accent-strong: #79d1bb;
+    --border: #353d39;
+    --muted: #9ba7a1;
+    --surface: #1d2320;
+    --surface-subtle: #181d1b;
+    --focus: #63aee5;
+  }
+
+  .segmentedControl button[aria-pressed="true"] {
+    color: #f1f6f3;
+  }
+
+  .iconButton:hover {
+    color: #f1f6f3;
+  }
+
+  .todayMarker::after {
+    background: #315e52;
+  }
+}
+
+@media (max-width: 759px) {
+  .appShell {
+    grid-template-rows: 48px minmax(0, 1fr) 52px;
+  }
+
+  .topbar {
+    padding: 0 10px;
+  }
+
+  .topbar .segmentedControl {
+    display: none;
+  }
+
+  .workspace,
+  .appShell[data-left-collapsed="true"] .workspace,
+  .appShell[data-right-collapsed="true"] .workspace,
+  .appShell[data-left-collapsed="true"][data-right-collapsed="true"] .workspace {
+    display: block;
+  }
+
+  .projectsPane,
+  .mainPane,
+  .detailsPane {
+    display: none;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+
+  .appShell[data-mobile-pane="projects"] .projectsPane,
+  .appShell[data-mobile-pane="timeline"] .mainPane,
+  .appShell[data-mobile-pane="details"] .detailsPane {
+    display: grid;
+    visibility: visible;
+  }
+
+  .projectsPane,
+  .detailsPane {
+    grid-template-rows: 64px minmax(0, 1fr);
+  }
+
+  .mobileNav {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .mobileNav button {
+    border: 0;
+    color: var(--muted);
+    background: transparent;
+  }
+
+  .mobileNav button[aria-pressed="true"] {
+    color: var(--accent-strong);
+    font-weight: 700;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
