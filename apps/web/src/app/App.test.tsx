@@ -61,6 +61,15 @@ describe("App", () => {
       name: "Calendar",
     });
     expect(calendarButton).not.toHaveProperty("disabled", true);
+    const mobileNavigation = screen.getByRole("navigation", {
+      name: "Mobile navigation",
+    });
+    expect(
+      within(mobileNavigation).getByRole("button", { name: "Timeline" }),
+    ).toBeTruthy();
+    expect(
+      within(mobileNavigation).getByRole("button", { name: "Calendar" }),
+    ).toBeTruthy();
     await user.click(calendarButton);
     expect(
       screen.getByRole("main", { name: "Calendar" }),

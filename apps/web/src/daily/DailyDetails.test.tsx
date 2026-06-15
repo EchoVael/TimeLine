@@ -125,6 +125,19 @@ describe("DailyDetails", () => {
       removeGroupIds: [],
     });
   });
+
+  it("reports a failed project association update", async () => {
+    const user = userEvent.setup();
+    updateGroups.mockRejectedValueOnce(new Error("version conflict"));
+    render(<DailyDetails date="2026-06-16" groups={groups} />);
+
+    await user.click(screen.getByRole("checkbox", { name: "Visa" }));
+
+    expect(await screen.findByRole("alert")).toHaveProperty(
+      "textContent",
+      "Could not update projects.",
+    );
+  });
 });
 
 describe("DailyEditor", () => {

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { Group, LocalDate } from "@timemagic/shared";
 
 import {
@@ -26,17 +27,23 @@ export function DailyDetails({ date, groups }: DailyDetailsProps) {
   const summary = useDailyNote(date);
   const document = useDailyDocument(date);
   const updateGroups = useUpdateDailyNoteGroups(date);
+  const [groupError, setGroupError] = useState<string | null>(null);
   const selectedGroupIds = new Set(summary.data?.groupIds ?? []);
 
   async function toggleGroup(groupId: string, selected: boolean) {
     if (!summary.data) {
       return;
     }
-    await updateGroups.mutateAsync({
-      addGroupIds: selected ? [] : [groupId],
-      expectedVersion: summary.data.version,
-      removeGroupIds: selected ? [groupId] : [],
-    });
+    try {
+      await updateGroups.mutateAsync({
+        addGroupIds: selected ? [] : [groupId],
+        expectedVersion: summary.data.version,
+        removeGroupIds: selected ? [groupId] : [],
+      });
+      setGroupError(null);
+    } catch {
+      setGroupError("Could not update projects.");
+    }
   }
 
   return (
@@ -68,6 +75,11 @@ export function DailyDetails({ date, groups }: DailyDetailsProps) {
             );
           })}
         </div>
+        {groupError ? (
+          <p className="dailyInlineError" role="alert">
+            {groupError}
+          </p>
+        ) : null}
       </section>
 
       <section className="dailySection">

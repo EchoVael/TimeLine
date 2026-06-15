@@ -166,6 +166,43 @@ describe("daily note routes", () => {
     });
   });
 
+  it("preserves the winning file when first saves race", async () => {
+    const responses = await Promise.all([
+      inject({
+        method: "PUT",
+        payload: {
+          expectedRevision: null,
+          markdown: "First competing body",
+        },
+        url: "/api/v1/daily-notes/2026-06-16/document",
+      }),
+      inject({
+        method: "PUT",
+        payload: {
+          expectedRevision: null,
+          markdown: "Second competing body",
+        },
+        url: "/api/v1/daily-notes/2026-06-16/document",
+      }),
+    ]);
+
+    expect(responses.map(({ statusCode }) => statusCode).sort()).toEqual([
+      200, 409,
+    ]);
+
+    const stored = await inject({
+      method: "GET",
+      url: "/api/v1/daily-notes/2026-06-16/document",
+    });
+    expect(stored.statusCode).toBe(200);
+    expect([
+      "First competing body",
+      "Second competing body",
+    ]).toContain(
+      stored.json().markdown.split("\n").at(-1),
+    );
+  });
+
   it("creates a note while associating multiple active groups", async () => {
     const thesis = await createGroup("Thesis");
     const visa = await createGroup("Visa", "#3a7d44");

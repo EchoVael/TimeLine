@@ -211,11 +211,28 @@ export function App() {
           Projects
         </button>
         <button
-          aria-pressed={mobilePane === "timeline"}
-          onClick={() => setMobilePane("timeline")}
+          aria-pressed={
+            mobilePane === "timeline" && primaryView === "timeline"
+          }
+          onClick={() => {
+            setPrimaryView("timeline");
+            setMobilePane("timeline");
+          }}
           type="button"
         >
-          {primaryView === "timeline" ? "Timeline" : "Calendar"}
+          Timeline
+        </button>
+        <button
+          aria-pressed={
+            mobilePane === "timeline" && primaryView === "calendar"
+          }
+          onClick={() => {
+            setPrimaryView("calendar");
+            setMobilePane("timeline");
+          }}
+          type="button"
+        >
+          Calendar
         </button>
         <button
           aria-pressed={mobilePane === "details"}

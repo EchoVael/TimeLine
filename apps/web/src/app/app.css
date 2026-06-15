@@ -710,6 +710,12 @@ textarea:focus-visible {
   font-size: 12px;
 }
 
+.dailyInlineError {
+  margin: 0;
+  color: #ba394c;
+  font-size: 11px;
+}
+
 .dailyEditor {
   display: grid;
   min-height: 320px;
@@ -1071,7 +1077,7 @@ textarea:focus-visible {
 
   .mobileNav {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     border-top: 1px solid var(--border);
     background: var(--surface);
   }

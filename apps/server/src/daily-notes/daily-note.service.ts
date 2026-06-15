@@ -49,6 +49,8 @@ function toMilestone(
 }
 
 export class DailyNoteService {
+  private readonly dateLocks = new Map<string, Promise<void>>();
+
   constructor(
     private readonly repository: DailyNoteRepository,
     private readonly groups: GroupRepository,
@@ -100,6 +102,13 @@ export class DailyNoteService {
     date: LocalDate,
     input: SaveDailyDocumentRequest,
   ): Promise<DocumentPayload> {
+    return this.withDateLock(date, () => this.saveUnlocked(date, input));
+  }
+
+  private async saveUnlocked(
+    date: LocalDate,
+    input: SaveDailyDocumentRequest,
+  ): Promise<DocumentPayload> {
     const note = this.repository.findByDate(date);
     if (!note) {
       if (input.expectedRevision !== null) {
@@ -144,6 +153,15 @@ export class DailyNoteService {
   }
 
   async updateGroups(
+    date: LocalDate,
+    input: UpdateDailyNoteGroupsRequest,
+  ): Promise<DailyNoteSummary> {
+    return this.withDateLock(date, () =>
+      this.updateGroupsUnlocked(date, input),
+    );
+  }
+
+  private async updateGroupsUnlocked(
     date: LocalDate,
     input: UpdateDailyNoteGroupsRequest,
   ): Promise<DailyNoteSummary> {
@@ -216,10 +234,12 @@ export class DailyNoteService {
     date: LocalDate,
     expectedRevision: string,
   ): Promise<DocumentPayload> {
-    return this.save(date, {
-      expectedRevision,
-      markdown: "",
-    });
+    return this.withDateLock(date, () =>
+      this.saveUnlocked(date, {
+        expectedRevision,
+        markdown: "",
+      }),
+    );
   }
 
   private async create(
@@ -332,5 +352,28 @@ export class DailyNoteService {
       modifiedAt: new Date(stored.fileMtimeMs).toISOString(),
       revision: stored.revision,
     };
+  }
+
+  private async withDateLock<T>(
+    date: LocalDate,
+    operation: () => Promise<T>,
+  ): Promise<T> {
+    const previous = this.dateLocks.get(date) ?? Promise.resolve();
+    let release: () => void = () => {};
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const queued = previous.then(() => gate);
+    this.dateLocks.set(date, queued);
+
+    await previous;
+    try {
+      return await operation();
+    } finally {
+      release();
+      if (this.dateLocks.get(date) === queued) {
+        this.dateLocks.delete(date);
+      }
+    }
   }
 }
