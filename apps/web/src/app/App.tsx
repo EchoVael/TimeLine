@@ -11,6 +11,8 @@ import {
 import { useGroups, useMilestones } from "../api/queries.js";
 import { IconButton } from "../components/IconButton.js";
 import { SegmentedControl } from "../components/SegmentedControl.js";
+import { GroupDetails } from "../groups/GroupDetails.js";
+import { GroupSidebar } from "../groups/GroupSidebar.js";
 import "./app.css";
 
 type MobilePane = "projects" | "timeline" | "details";
@@ -21,6 +23,12 @@ export function App() {
   const [leftCollapsed, setLeftCollapsed] = useState(false);
   const [rightCollapsed, setRightCollapsed] = useState(false);
   const [mobilePane, setMobilePane] = useState<MobilePane>("timeline");
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+  const [visibleGroupIds, setVisibleGroupIds] = useState<string[] | null>(null);
+  const allGroupIds = groups.data?.items.map(({ id }) => id) ?? [];
+  const effectiveVisibleGroupIds = visibleGroupIds ?? allGroupIds;
+  const selectedGroup =
+    groups.data?.items.find(({ id }) => id === selectedGroupId) ?? null;
 
   return (
     <div
@@ -60,10 +68,22 @@ export function App() {
               onClick={() => setLeftCollapsed(true)}
             />
           </div>
-          <div className="emptyState">
-            <FolderKanban aria-hidden size={20} />
-            <p>Create a project to organize milestones.</p>
-          </div>
+          {groups.isLoading ? (
+            <div className="emptyState">
+              <FolderKanban aria-hidden size={20} />
+              <p>Loading projects...</p>
+            </div>
+          ) : (
+            <GroupSidebar
+              onSelect={(groupId) => {
+                setSelectedGroupId(groupId);
+                setMobilePane("details");
+              }}
+              onVisibleGroupIdsChange={setVisibleGroupIds}
+              selectedGroupId={selectedGroupId}
+              visibleGroupIds={effectiveVisibleGroupIds}
+            />
+          )}
         </nav>
 
         <main aria-label="Timeline" className="mainPane">
@@ -119,9 +139,13 @@ export function App() {
               onClick={() => setRightCollapsed(true)}
             />
           </div>
-          <div className="emptyState">
-            <p>Select a project or milestone.</p>
-          </div>
+          {selectedGroup ? (
+            <GroupDetails group={selectedGroup} />
+          ) : (
+            <div className="emptyState">
+              <p>Select a project or milestone.</p>
+            </div>
+          )}
         </aside>
       </div>
 

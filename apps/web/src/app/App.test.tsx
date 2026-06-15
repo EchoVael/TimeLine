@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { App } from "./App.js";
 
 vi.mock("../api/queries.js", () => ({
+  useCreateGroup: () => ({ isPending: false, mutateAsync: vi.fn() }),
   useGroups: () => ({
     data: { items: [], nextCursor: null },
     isLoading: false,
@@ -12,6 +13,7 @@ vi.mock("../api/queries.js", () => ({
     data: { items: [], nextCursor: null },
     isLoading: false,
   }),
+  useReorderGroups: () => ({ mutateAsync: vi.fn() }),
 }));
 
 describe("App", () => {
