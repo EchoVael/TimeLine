@@ -13,6 +13,8 @@ vi.mock("../api/queries.js", () => ({
     data: { items: [], nextCursor: null },
     isLoading: false,
   }),
+  useCreateMilestone: () => ({ isPending: false, mutateAsync: vi.fn() }),
+  useReorderMilestones: () => ({ mutateAsync: vi.fn() }),
   useReorderGroups: () => ({ mutateAsync: vi.fn() }),
 }));
 

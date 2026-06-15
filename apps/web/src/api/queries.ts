@@ -1,8 +1,11 @@
 import type {
+  CreateMilestoneRequest,
   CreateGroupRequest,
   Group,
   Milestone,
   ReorderGroupsRequest,
+  ReorderMilestonesRequest,
+  UpdateMilestoneRequest,
   UpdateGroupRequest,
 } from "@timemagic/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -21,10 +24,27 @@ export function useGroups() {
   });
 }
 
-export function useMilestones() {
+interface MilestoneFilters {
+  groupIds?: string[];
+  includeCancelled?: boolean;
+  includeCompleted?: boolean;
+  includePast?: boolean;
+}
+
+export function useMilestones(filters: MilestoneFilters = {}) {
+  const params = new URLSearchParams();
+  filters.groupIds?.forEach((groupId) => params.append("groupId", groupId));
+  if (filters.includeCancelled) params.set("includeCancelled", "true");
+  if (filters.includeCompleted) params.set("includeCompleted", "true");
+  if (filters.includePast) params.set("includePast", "true");
+  const query = params.toString();
+
   return useQuery({
-    queryFn: () => apiRequest<ListResponse<Milestone>>("/milestones"),
-    queryKey: ["milestones"],
+    queryFn: () =>
+      apiRequest<ListResponse<Milestone>>(
+        `/milestones${query ? `?${query}` : ""}`,
+      ),
+    queryKey: ["milestones", filters],
   });
 }
 
@@ -86,6 +106,48 @@ export function useReorderGroups() {
       }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["groups"] });
+    },
+  });
+}
+
+export function useCreateMilestone() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CreateMilestoneRequest) =>
+      apiRequest<{ milestone: Milestone }>("/milestones", {
+        body: JSON.stringify(input),
+        method: "POST",
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["milestones"] });
+    },
+  });
+}
+
+export function useUpdateMilestone(milestoneId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: UpdateMilestoneRequest) =>
+      apiRequest<Milestone>(`/milestones/${milestoneId}`, {
+        body: JSON.stringify(input),
+        method: "PATCH",
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["milestones"] });
+    },
+  });
+}
+
+export function useReorderMilestones() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: ReorderMilestonesRequest) =>
+      apiRequest<ListResponse<Milestone>>("/milestones/day-order", {
+        body: JSON.stringify(input),
+        method: "PUT",
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["milestones"] });
     },
   });
 }

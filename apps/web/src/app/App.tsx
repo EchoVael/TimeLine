@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  CalendarDays,
   ChevronLeft,
   ChevronRight,
   FolderKanban,
@@ -13,22 +12,41 @@ import { IconButton } from "../components/IconButton.js";
 import { SegmentedControl } from "../components/SegmentedControl.js";
 import { GroupDetails } from "../groups/GroupDetails.js";
 import { GroupSidebar } from "../groups/GroupSidebar.js";
+import { MilestoneDetails } from "../milestones/MilestoneDetails.js";
+import { TimelineView } from "../timeline/TimelineView.js";
 import "./app.css";
 
 type MobilePane = "projects" | "timeline" | "details";
 
+function localToday() {
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${now.getFullYear()}-${month}-${day}` as const;
+}
+
 export function App() {
   const groups = useGroups();
-  const milestones = useMilestones();
+  const allMilestones = useMilestones({
+    includeCancelled: true,
+    includeCompleted: true,
+    includePast: true,
+  });
   const [leftCollapsed, setLeftCollapsed] = useState(false);
   const [rightCollapsed, setRightCollapsed] = useState(false);
   const [mobilePane, setMobilePane] = useState<MobilePane>("timeline");
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+  const [selectedMilestoneId, setSelectedMilestoneId] = useState<string | null>(
+    null,
+  );
   const [visibleGroupIds, setVisibleGroupIds] = useState<string[] | null>(null);
   const allGroupIds = groups.data?.items.map(({ id }) => id) ?? [];
   const effectiveVisibleGroupIds = visibleGroupIds ?? allGroupIds;
   const selectedGroup =
     groups.data?.items.find(({ id }) => id === selectedGroupId) ?? null;
+  const selectedMilestone =
+    allMilestones.data?.items.find(({ id }) => id === selectedMilestoneId) ??
+    null;
 
   return (
     <div
@@ -77,6 +95,7 @@ export function App() {
             <GroupSidebar
               onSelect={(groupId) => {
                 setSelectedGroupId(groupId);
+                setSelectedMilestoneId(null);
                 setMobilePane("details");
               }}
               onVisibleGroupIdsChange={setVisibleGroupIds}
@@ -112,19 +131,16 @@ export function App() {
             )}
           </div>
 
-          <div className="timelineCanvas">
-            <div className="todayMarker">
-              <span>Today</span>
-            </div>
-            <div className="emptyState emptyState--large">
-              <CalendarDays aria-hidden size={22} />
-              <p>
-                {milestones.isLoading
-                  ? "Loading milestones..."
-                  : "No upcoming milestones."}
-              </p>
-            </div>
-          </div>
+          <TimelineView
+            groups={groups.data?.items ?? []}
+            onSelect={(milestoneId) => {
+              setSelectedGroupId(null);
+              setSelectedMilestoneId(milestoneId);
+              setMobilePane("details");
+            }}
+            today={localToday()}
+            visibleGroupIds={effectiveVisibleGroupIds}
+          />
         </main>
 
         <aside aria-label="Details" className="pane detailsPane">
@@ -139,7 +155,12 @@ export function App() {
               onClick={() => setRightCollapsed(true)}
             />
           </div>
-          {selectedGroup ? (
+          {selectedMilestone ? (
+            <MilestoneDetails
+              groups={groups.data?.items ?? []}
+              milestone={selectedMilestone}
+            />
+          ) : selectedGroup ? (
             <GroupDetails group={selectedGroup} />
           ) : (
             <div className="emptyState">

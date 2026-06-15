@@ -223,6 +223,242 @@ textarea:focus-visible {
   padding: 20px clamp(16px, 4vw, 48px) 48px;
 }
 
+.timelineView {
+  display: grid;
+  grid-template-rows: 48px minmax(0, 1fr);
+  min-height: 0;
+}
+
+.timelineFilters {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 14px;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.timelineFilters label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.timelineFilters .iconButton {
+  margin-left: auto;
+}
+
+.timelineList {
+  display: grid;
+  padding-top: 10px;
+}
+
+.timelineRow {
+  display: grid;
+  grid-template-columns: 84px 22px minmax(0, 1fr) 28px;
+  min-height: 52px;
+  align-items: stretch;
+}
+
+.timelineRow > time {
+  align-self: center;
+  padding-right: 12px;
+  color: var(--muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.timelineRail {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.timelineRail::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  content: "";
+  background: var(--border);
+}
+
+.timelineDot {
+  z-index: 1;
+  width: 10px;
+  height: 10px;
+  border: 3px solid;
+  border-radius: 50%;
+  background: var(--surface-subtle);
+}
+
+.timelineContent {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  align-content: center;
+  margin: 3px 0;
+  padding: 7px 9px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  color: inherit;
+  text-align: left;
+  background: transparent;
+}
+
+.timelineContent:hover,
+.timelineContent:focus-visible {
+  border-color: var(--border);
+  background: var(--surface);
+}
+
+.timelineTitleLine,
+.timelineMeta {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.timelineTitleLine strong {
+  overflow: hidden;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.timelineMeta {
+  flex-wrap: wrap;
+}
+
+.groupTag,
+.statusBadge {
+  display: inline-flex;
+  min-height: 20px;
+  align-items: center;
+  gap: 5px;
+  padding: 1px 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+.statusBadge--completed {
+  color: #277254;
+}
+
+.statusBadge--cancelled {
+  text-decoration: line-through;
+}
+
+.overdueIcon {
+  display: inline-flex;
+  color: #ba394c;
+}
+
+.timelineDragHandle {
+  display: grid;
+  width: 28px;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  color: var(--muted);
+  background: transparent;
+  cursor: grab;
+}
+
+.modalBackdrop {
+  position: fixed;
+  z-index: 20;
+  inset: 0;
+  display: grid;
+  padding: 18px;
+  place-items: center;
+  background: rgb(20 25 23 / 45%);
+}
+
+.modalPanel {
+  display: grid;
+  width: min(430px, 100%);
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--surface);
+  box-shadow: 0 20px 50px rgb(0 0 0 / 22%);
+}
+
+.modalHeader h2,
+.modalHeader p {
+  margin: 0;
+}
+
+.modalHeader h2 {
+  font-size: 17px;
+}
+
+.modalHeader p {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.modalPanel label {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.modalPanel input,
+.modalPanel select,
+.detailsForm select {
+  width: 100%;
+  min-height: 36px;
+  padding: 7px 9px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: inherit;
+  background: var(--surface);
+}
+
+.propertyReadout {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.propertyReadout strong {
+  color: inherit;
+}
+
+.overdueNotice {
+  padding: 8px 9px;
+  border-left: 3px solid #ba394c;
+  color: #a72f41;
+  background: rgb(186 57 76 / 8%);
+  font-size: 12px;
+}
+
+.documentPlaceholder {
+  padding: 12px;
+  border: 1px dashed var(--border);
+  border-radius: 5px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
 .todayMarker {
   display: flex;
   align-items: center;
