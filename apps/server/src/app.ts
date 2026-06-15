@@ -5,6 +5,7 @@ import { createDatabase } from "./db/client.js";
 import { migrateDatabase } from "./db/migrate.js";
 import { registerGroupRoutes } from "./groups/group.routes.js";
 import { ApiError } from "./lib/api-error.js";
+import { registerMilestoneRoutes } from "./milestones/milestone.routes.js";
 
 export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
   const app = Fastify({
@@ -69,6 +70,7 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
   }));
 
   registerGroupRoutes(app, database);
+  registerMilestoneRoutes(app, database, options);
 
   return app;
 }
