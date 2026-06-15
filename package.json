@@ -4,7 +4,7 @@
   "private": true,
   "packageManager": "pnpm@11.1.2",
   "scripts": {
-    "dev": "TIMEMAGIC_STARTUP_TOKEN=timemagic-dev concurrently -k -n server,web \"pnpm --filter @timemagic/server dev\" \"pnpm --filter @timemagic/web dev\"",
+    "dev": "TIMEMAGIC_STARTUP_TOKEN=timemagic-dev TIMEMAGIC_DATA_ROOT=../../data concurrently -k -n server,web \"pnpm --filter @timemagic/server dev\" \"pnpm --filter @timemagic/web dev\"",
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
