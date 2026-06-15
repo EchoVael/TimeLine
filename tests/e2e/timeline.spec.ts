@@ -52,3 +52,54 @@ test("creates a project and milestone in the timeline", async ({
     path: testInfo.outputPath(`timeline-${testInfo.project.name}.png`),
   });
 });
+
+test("archives and restores a project", async ({ page }, testInfo) => {
+  const mobile = testInfo.project.name === "mobile";
+  const projectName = `Archived project ${testInfo.project.name}`;
+  await page.goto("/#token=e2e-token");
+
+  if (mobile) {
+    await page
+      .getByRole("button", { name: "Projects", pressed: false })
+      .click();
+  }
+
+  await page.getByRole("button", { name: "New project" }).click();
+  await page.getByLabel("Project name").fill(projectName);
+  await page.getByRole("button", { name: "Create project" }).click();
+  await page
+    .getByRole("button", { name: `Open ${projectName}` })
+    .click();
+  await page.getByRole("button", { name: "Archive project" }).click();
+
+  if (mobile) {
+    await page
+      .getByRole("button", { name: "Projects", pressed: false })
+      .click();
+  }
+  await expect(
+    page.getByRole("button", { name: `Open ${projectName}` }),
+  ).toHaveCount(0);
+  await page
+    .getByRole("checkbox", { name: "Show archived projects" })
+    .check();
+  await page
+    .getByRole("button", { name: `Open ${projectName}` })
+    .click();
+
+  if (mobile) {
+    await expect(
+      page.getByRole("button", { name: "Unarchive project" }),
+    ).toBeVisible();
+  }
+  await page.getByRole("button", { name: "Unarchive project" }).click();
+
+  if (mobile) {
+    await page
+      .getByRole("button", { name: "Projects", pressed: false })
+      .click();
+  }
+  await expect(
+    page.getByRole("button", { name: `Open ${projectName}` }),
+  ).toBeVisible();
+});

@@ -867,6 +867,41 @@ textarea:focus-visible {
   background: var(--surface-subtle);
 }
 
+.archivedProjects {
+  border-top: 1px solid var(--border);
+}
+
+.archivedToggle {
+  display: flex;
+  min-height: 38px;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.groupRow--archived {
+  grid-template-columns: 24px 12px minmax(0, 1fr) auto;
+  padding-right: 6px;
+  opacity: 0.72;
+}
+
+.archivedRowSpacer {
+  width: 24px;
+}
+
+.groupLabelButton--archived {
+  display: block;
+  padding-left: 8px;
+}
+
+.archivedBadge {
+  color: var(--muted);
+  font-size: 9px;
+  text-transform: uppercase;
+}
+
 .dragHandle {
   display: grid;
   width: 24px;

@@ -1,11 +1,16 @@
 import { useEffect, useState, type FormEvent } from "react";
 import type { Group } from "@timemagic/shared";
 
-import { useArchiveGroup, useUpdateGroup } from "../api/queries.js";
+import {
+  useArchiveGroup,
+  useUnarchiveGroup,
+  useUpdateGroup,
+} from "../api/queries.js";
 
 export function GroupDetails({ group }: { group: Group }) {
   const update = useUpdateGroup(group.id);
   const archive = useArchiveGroup(group.id);
+  const unarchive = useUnarchiveGroup(group.id);
   const [name, setName] = useState(group.name);
   const [color, setColor] = useState(group.color);
   const [description, setDescription] = useState(group.description);
@@ -61,14 +66,25 @@ export function GroupDetails({ group }: { group: Group }) {
       >
         Save project
       </button>
-      <button
-        className="dangerButton"
-        disabled={archive.isPending}
-        onClick={() => archive.mutate(group.version)}
-        type="button"
-      >
-        Archive project
-      </button>
+      {group.archivedAt ? (
+        <button
+          className="primaryButton"
+          disabled={unarchive.isPending}
+          onClick={() => void unarchive.mutateAsync(group.version)}
+          type="button"
+        >
+          Unarchive project
+        </button>
+      ) : (
+        <button
+          className="dangerButton"
+          disabled={archive.isPending}
+          onClick={() => archive.mutate(group.version)}
+          type="button"
+        >
+          Archive project
+        </button>
+      )}
     </form>
   );
 }

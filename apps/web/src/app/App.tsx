@@ -30,7 +30,7 @@ function localToday() {
 }
 
 export function App() {
-  const groups = useGroups();
+  const groups = useGroups(true);
   const allMilestones = useMilestones({
     includeCancelled: true,
     includeCompleted: true,
@@ -46,8 +46,13 @@ export function App() {
   );
   const [selectedDate, setSelectedDate] = useState<LocalDate | null>(null);
   const [visibleGroupIds, setVisibleGroupIds] = useState<string[] | null>(null);
-  const allGroupIds = groups.data?.items.map(({ id }) => id) ?? [];
-  const effectiveVisibleGroupIds = visibleGroupIds ?? allGroupIds;
+  const activeGroups =
+    groups.data?.items.filter(({ archivedAt }) => !archivedAt) ?? [];
+  const allGroupIds = activeGroups.map(({ id }) => id);
+  const activeGroupIdSet = new Set(allGroupIds);
+  const effectiveVisibleGroupIds = (
+    visibleGroupIds ?? allGroupIds
+  ).filter((id) => activeGroupIdSet.has(id));
   const selectedGroup =
     groups.data?.items.find(({ id }) => id === selectedGroupId) ?? null;
   const selectedMilestone =
@@ -84,7 +89,7 @@ export function App() {
           <div className="paneHeader">
             <div>
               <span className="eyebrow">Projects</span>
-              <strong>{groups.data?.items.length ?? 0} active</strong>
+              <strong>{activeGroups.length} active</strong>
             </div>
             <IconButton
               icon={PanelLeftClose}
@@ -144,7 +149,7 @@ export function App() {
 
           {primaryView === "timeline" ? (
             <TimelineView
-              groups={groups.data?.items ?? []}
+              groups={activeGroups}
               onSelect={(milestoneId) => {
                 setSelectedDate(null);
                 setSelectedGroupId(null);
@@ -156,7 +161,7 @@ export function App() {
             />
           ) : (
             <CalendarView
-              groups={groups.data?.items ?? []}
+              groups={activeGroups}
               onSelectDate={(date) => {
                 setSelectedDate(date);
                 setSelectedGroupId(null);
@@ -184,7 +189,7 @@ export function App() {
           </div>
           {selectedMilestone ? (
             <MilestoneDetails
-              groups={groups.data?.items ?? []}
+              groups={activeGroups}
               milestone={selectedMilestone}
             />
           ) : selectedGroup ? (
@@ -192,7 +197,7 @@ export function App() {
           ) : selectedDate ? (
             <DailyDetails
               date={selectedDate}
-              groups={groups.data?.items ?? []}
+              groups={activeGroups}
             />
           ) : (
             <div className="emptyState">

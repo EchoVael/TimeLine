@@ -24,10 +24,11 @@ interface ListResponse<T> {
   nextCursor: string | null;
 }
 
-export function useGroups() {
+export function useGroups(includeArchived = false) {
+  const query = includeArchived ? "?includeArchived=true" : "";
   return useQuery({
-    queryFn: () => apiRequest<ListResponse<Group>>("/groups"),
-    queryKey: ["groups"],
+    queryFn: () => apiRequest<ListResponse<Group>>(`/groups${query}`),
+    queryKey: ["groups", { includeArchived }],
   });
 }
 
@@ -170,6 +171,24 @@ export function useArchiveGroup(groupId: string) {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["groups"] }),
         queryClient.invalidateQueries({ queryKey: ["milestones"] }),
+      ]);
+    },
+  });
+}
+
+export function useUnarchiveGroup(groupId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (expectedVersion: number) =>
+      apiRequest<Group>(`/groups/${groupId}/unarchive`, {
+        body: JSON.stringify({ expectedVersion }),
+        method: "POST",
+      }),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["groups"] }),
+        queryClient.invalidateQueries({ queryKey: ["milestones"] }),
+        queryClient.invalidateQueries({ queryKey: ["calendar"] }),
       ]);
     },
   });

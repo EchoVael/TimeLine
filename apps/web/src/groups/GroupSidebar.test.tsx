@@ -9,7 +9,7 @@ const reorderGroups = vi.fn();
 
 vi.mock("../api/queries.js", () => ({
   useCreateGroup: () => ({ isPending: false, mutateAsync: createGroup }),
-  useGroups: () => ({
+  useGroups: (includeArchived = false) => ({
     data: {
       items: [
         {
@@ -22,15 +22,15 @@ vi.mock("../api/queries.js", () => ({
           version: 1,
         },
         {
-          archivedAt: null,
+          archivedAt: "2026-06-15T19:06:56.849Z",
           color: "#2a9d8f",
           description: "",
           id: "group-visa",
           name: "Visa",
           sortOrder: 1,
-          version: 1,
+          version: 2,
         },
-      ],
+      ].filter((group) => includeArchived || !group.archivedAt),
       nextCursor: null,
     },
     isLoading: false,
@@ -51,7 +51,7 @@ describe("GroupSidebar", () => {
         onSelect={vi.fn()}
         onVisibleGroupIdsChange={vi.fn()}
         selectedGroupId={null}
-        visibleGroupIds={["group-thesis", "group-visa"]}
+        visibleGroupIds={["group-thesis"]}
       />,
     );
 
@@ -75,12 +75,12 @@ describe("GroupSidebar", () => {
         onSelect={onSelect}
         onVisibleGroupIdsChange={onVisibleGroupIdsChange}
         selectedGroupId={null}
-        visibleGroupIds={["group-thesis", "group-visa"]}
+        visibleGroupIds={["group-thesis"]}
       />,
     );
 
     await user.click(screen.getByRole("checkbox", { name: "Show Thesis" }));
-    expect(onVisibleGroupIdsChange).toHaveBeenLastCalledWith(["group-visa"]);
+    expect(onVisibleGroupIdsChange).toHaveBeenLastCalledWith([]);
     expect(onSelect).not.toHaveBeenCalled();
 
     await user.click(screen.getByRole("button", { name: "Open Thesis" }));
@@ -88,5 +88,27 @@ describe("GroupSidebar", () => {
 
     await user.click(screen.getByRole("button", { name: "Only Thesis" }));
     expect(onVisibleGroupIdsChange).toHaveBeenLastCalledWith(["group-thesis"]);
+  });
+
+  it("reveals archived projects on request", async () => {
+    const user = userEvent.setup();
+    const onSelect = vi.fn();
+    render(
+      <GroupSidebar
+        onSelect={onSelect}
+        onVisibleGroupIdsChange={vi.fn()}
+        selectedGroupId={null}
+        visibleGroupIds={["group-thesis"]}
+      />,
+    );
+
+    expect(screen.queryByRole("button", { name: "Open Visa" })).toBeNull();
+    await user.click(
+      screen.getByRole("checkbox", { name: "Show archived projects" }),
+    );
+    await user.click(screen.getByRole("button", { name: "Open Visa" }));
+
+    expect(onSelect).toHaveBeenCalledWith("group-visa");
+    expect(screen.getByText("Archived")).toBeTruthy();
   });
 });

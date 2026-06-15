@@ -92,16 +92,48 @@ function SortableGroupRow({
   );
 }
 
+function ArchivedGroupRow({
+  group,
+  onSelect,
+  selected,
+}: {
+  group: Group;
+  onSelect: () => void;
+  selected: boolean;
+}) {
+  return (
+    <div
+      className="groupRow groupRow--archived"
+      data-selected={selected}
+    >
+      <span className="archivedRowSpacer" />
+      <span className="groupSwatch" style={{ backgroundColor: group.color }} />
+      <button
+        aria-label={`Open ${group.name}`}
+        className="groupLabelButton groupLabelButton--archived"
+        onClick={onSelect}
+        type="button"
+      >
+        <span>{group.name}</span>
+      </button>
+      <span className="archivedBadge">Archived</span>
+    </div>
+  );
+}
+
 export function GroupSidebar({
   onSelect,
   onVisibleGroupIdsChange,
   selectedGroupId,
   visibleGroupIds,
 }: GroupSidebarProps) {
-  const groups = useGroups();
+  const groups = useGroups(true);
   const reorder = useReorderGroups();
   const [creating, setCreating] = useState(false);
-  const items = groups.data?.items ?? [];
+  const [showArchived, setShowArchived] = useState(false);
+  const allItems = groups.data?.items ?? [];
+  const items = allItems.filter(({ archivedAt }) => !archivedAt);
+  const archivedItems = allItems.filter(({ archivedAt }) => archivedAt);
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 5 },
@@ -162,6 +194,31 @@ export function GroupSidebar({
           </div>
         </SortableContext>
       </DndContext>
+
+      {archivedItems.length > 0 ? (
+        <div className="archivedProjects">
+          <label className="archivedToggle">
+            <input
+              checked={showArchived}
+              onChange={(event) => setShowArchived(event.target.checked)}
+              type="checkbox"
+            />
+            <span>Show archived projects</span>
+          </label>
+          {showArchived ? (
+            <div className="groupList">
+              {archivedItems.map((group) => (
+                <ArchivedGroupRow
+                  group={group}
+                  key={group.id}
+                  onSelect={() => onSelect(group.id)}
+                  selected={selectedGroupId === group.id}
+                />
+              ))}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }
