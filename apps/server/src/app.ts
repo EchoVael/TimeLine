@@ -3,6 +3,7 @@ import Fastify, { type FastifyInstance } from "fastify";
 import type { AppOptions } from "./config.js";
 import { createDatabase } from "./db/client.js";
 import { migrateDatabase } from "./db/migrate.js";
+import { registerGroupRoutes } from "./groups/group.routes.js";
 import { ApiError } from "./lib/api-error.js";
 
 export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
@@ -66,6 +67,8 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
       inProgress: 0,
     },
   }));
+
+  registerGroupRoutes(app, database);
 
   return app;
 }
