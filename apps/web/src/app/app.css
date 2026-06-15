@@ -247,16 +247,43 @@ textarea:focus-visible {
   align-items: center;
 }
 
-.calendarToolbar h2 {
-  margin: 0;
-  font-size: 15px;
-  letter-spacing: 0;
-}
-
 .calendarNavigation {
   display: flex;
   align-items: center;
   gap: 2px;
+}
+
+.calendarPeriodControls {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.calendarPeriodControls label {
+  min-width: 0;
+}
+
+.calendarPeriodControls label > span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.calendarPeriodControls select {
+  height: 30px;
+  padding: 0 24px 0 7px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: inherit;
+  font-size: 12px;
+  background: var(--surface);
 }
 
 .calendarTodayButton {
@@ -1159,9 +1186,15 @@ textarea:focus-visible {
     grid-template-columns: 1fr auto;
   }
 
-  .calendarToolbar h2 {
+  .calendarPeriodControls {
     grid-column: 2;
-    font-size: 13px;
+  }
+
+  .calendarPeriodControls select {
+    max-width: 92px;
+    height: 28px;
+    padding-left: 5px;
+    font-size: 11px;
   }
 
   .calendarToolbarSpacer {

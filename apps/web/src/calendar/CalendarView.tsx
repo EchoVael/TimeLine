@@ -1,3 +1,4 @@
+import type { ChangeEvent } from "react";
 import { useMemo, useState } from "react";
 import type { Group, LocalDate } from "@timemagic/shared";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -7,6 +8,8 @@ import { IconButton } from "../components/IconButton.js";
 import { MilestoneForm } from "../milestones/MilestoneForm.js";
 import { CalendarDayCell } from "./CalendarDayCell.js";
 import {
+  calendarMonths,
+  calendarYearOptions,
   cursorFromDate,
   monthTitle,
   shiftMonth,
@@ -45,6 +48,21 @@ export function CalendarView({
   const visibleGroups = groups.filter(({ id }) =>
     visibleGroupIds.includes(id),
   );
+  const yearOptions = calendarYearOptions(cursor.year);
+
+  function handleYearChange(event: ChangeEvent<HTMLSelectElement>) {
+    const year = Number(event.currentTarget.value);
+    if (Number.isInteger(year) && year > 0) {
+      setCursor((current) => ({ ...current, year }));
+    }
+  }
+
+  function handleMonthChange(event: ChangeEvent<HTMLSelectElement>) {
+    const month = Number(event.currentTarget.value);
+    if (Number.isInteger(month) && month >= 1 && month <= 12) {
+      setCursor((current) => ({ ...current, month }));
+    }
+  }
 
   return (
     <div className="calendarView">
@@ -68,7 +86,36 @@ export function CalendarView({
             Today
           </button>
         </div>
-        <h2>{monthTitle(cursor)}</h2>
+        <div className="calendarPeriodControls">
+          <label>
+            <span>Year</span>
+            <select
+              aria-label="Year"
+              onChange={handleYearChange}
+              value={cursor.year}
+            >
+              {yearOptions.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            <span>Month</span>
+            <select
+              aria-label="Month"
+              onChange={handleMonthChange}
+              value={cursor.month}
+            >
+              {calendarMonths.map((month) => (
+                <option key={month.value} value={month.value}>
+                  {month.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
         <span className="calendarToolbarSpacer" />
       </div>
 

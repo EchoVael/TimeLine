@@ -1,6 +1,6 @@
 import type { CalendarMonthResponse, Group } from "@timemagic/shared";
 import { calendarDates } from "@timemagic/shared";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -78,9 +78,15 @@ describe("CalendarView", () => {
       />,
     );
 
-    expect(
-      screen.getByRole("heading", { name: "June 2026" }),
-    ).toBeTruthy();
+    expect(screen.getByRole("combobox", { name: "Year" })).toHaveProperty(
+      "value",
+      "2026",
+    );
+    expect(screen.getByRole("combobox", { name: "Month" })).toHaveProperty(
+      "value",
+      "6",
+    );
+    expect(screen.getByRole("grid", { name: "June 2026" })).toBeTruthy();
     expect(screen.getAllByRole("columnheader").map(({ textContent }) => textContent)).toEqual([
       "Mon",
       "Tue",
@@ -96,7 +102,7 @@ describe("CalendarView", () => {
     expect(screen.getAllByRole("gridcell")).toHaveLength(42);
   });
 
-  it("navigates months and returns to today", async () => {
+  it("selects a month and year, navigates, and returns to today", async () => {
     const user = userEvent.setup();
     render(
       <CalendarView
@@ -108,14 +114,27 @@ describe("CalendarView", () => {
       />,
     );
 
+    const year = screen.getByRole("combobox", { name: "Year" });
+    const month = screen.getByRole("combobox", { name: "Month" });
+
+    await user.selectOptions(month, "12");
+    expect(screen.getByRole("grid", { name: "December 2026" })).toBeTruthy();
+
+    await user.selectOptions(year, "2036");
+    expect(screen.getByRole("grid", { name: "December 2036" })).toBeTruthy();
+
+    fireEvent.change(year, { target: { value: "not-a-year" } });
+    fireEvent.change(month, { target: { value: "13" } });
+    expect(screen.getByRole("grid", { name: "December 2036" })).toBeTruthy();
+
     await user.click(screen.getByRole("button", { name: "Next month" }));
-    expect(
-      screen.getByRole("heading", { name: "July 2026" }),
-    ).toBeTruthy();
+    expect(year).toHaveProperty("value", "2037");
+    expect(month).toHaveProperty("value", "1");
+    expect(screen.getByRole("option", { name: "2037" })).toBeTruthy();
+
     await user.click(screen.getByRole("button", { name: "Today" }));
-    expect(
-      screen.getByRole("heading", { name: "June 2026" }),
-    ).toBeTruthy();
+    expect(year).toHaveProperty("value", "2026");
+    expect(month).toHaveProperty("value", "6");
   });
 
   it("selects a date and opens milestone creation prefilled to it", async () => {
