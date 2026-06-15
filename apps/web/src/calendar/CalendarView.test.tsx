@@ -167,6 +167,38 @@ describe("CalendarView", () => {
     expect(screen.getByRole("grid", { name: "June 2026" })).toBeTruthy();
   });
 
+  it("keeps the current month when a selected calendar date clears the initial date", async () => {
+    const user = userEvent.setup();
+    const onSelectDate = vi.fn();
+    const props = {
+      groups,
+      onSelectDate,
+      selectedDate: null,
+      today: "2026-06-16" as const,
+      visibleGroupIds: groups.map(({ id }) => id),
+    };
+    const { rerender } = render(
+      <CalendarView
+        {...props}
+        initialDate="2027-01-03"
+      />,
+    );
+
+    expect(screen.getByRole("grid", { name: "January 2027" })).toBeTruthy();
+
+    await user.click(screen.getByRole("button", { name: "Open 2027-01-03" }));
+    expect(onSelectDate).toHaveBeenCalledWith("2027-01-03");
+
+    rerender(
+      <CalendarView
+        {...props}
+        initialDate={undefined}
+        selectedDate="2027-01-03"
+      />,
+    );
+    expect(screen.getByRole("grid", { name: "January 2027" })).toBeTruthy();
+  });
+
   it("selects a date and opens milestone creation prefilled to it", async () => {
     const user = userEvent.setup();
     const onSelectDate = vi.fn();

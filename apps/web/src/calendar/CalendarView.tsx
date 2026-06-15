@@ -34,10 +34,11 @@ export function CalendarView({
   today,
   visibleGroupIds,
 }: CalendarViewProps) {
-  const cursorDate = initialDate ?? today;
   const todayCursor = cursorFromDate(today);
-  const [cursor, setCursor] = useState(() => cursorFromDate(cursorDate));
-  const lastInitialDate = useRef(cursorDate);
+  const [cursor, setCursor] = useState(() =>
+    cursorFromDate(initialDate ?? today),
+  );
+  const lastInitialDate = useRef<LocalDate | undefined>(initialDate);
   const [creatingDate, setCreatingDate] = useState<LocalDate | null>(null);
   const calendar = useCalendar(
     cursor.year,
@@ -55,11 +56,15 @@ export function CalendarView({
   const yearOptions = calendarYearOptions(cursor.year);
 
   useEffect(() => {
-    if (lastInitialDate.current !== cursorDate) {
-      lastInitialDate.current = cursorDate;
-      setCursor(cursorFromDate(cursorDate));
+    if (!initialDate) {
+      lastInitialDate.current = undefined;
+      return;
     }
-  }, [cursorDate]);
+    if (lastInitialDate.current !== initialDate) {
+      lastInitialDate.current = initialDate;
+      setCursor(cursorFromDate(initialDate));
+    }
+  }, [initialDate]);
 
   function handleYearChange(event: ChangeEvent<HTMLSelectElement>) {
     const year = Number(event.currentTarget.value);
