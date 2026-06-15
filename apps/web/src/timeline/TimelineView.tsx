@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import {
   DndContext,
   PointerSensor,
@@ -21,6 +21,11 @@ import {
 import { MilestoneForm } from "../milestones/MilestoneForm.js";
 import { TimelineFilters } from "./TimelineFilters.js";
 import { TimelineRow } from "./TimelineRow.js";
+import { TimelineYearMarker } from "./TimelineYearMarker.js";
+import {
+  startsTimelineYear,
+  timelineYear,
+} from "./timeline-utils.js";
 
 interface TimelineViewProps {
   groups: Group[];
@@ -113,16 +118,29 @@ export function TimelineView({
               strategy={verticalListSortingStrategy}
             >
               <div className="timelineList">
-                {visibleItems.map((milestone) => {
+                {visibleItems.map((milestone, index) => {
                   const group = groupMap.get(milestone.groupId);
-                  return group ? (
-                    <TimelineRow
-                      group={group}
-                      key={milestone.id}
-                      milestone={milestone}
-                      onSelect={() => onSelect(milestone.id)}
-                    />
-                  ) : null;
+                  if (!group) {
+                    return null;
+                  }
+                  const previousDate = visibleItems[index - 1]?.date;
+                  return (
+                    <Fragment key={milestone.id}>
+                      {startsTimelineYear(
+                        milestone.date,
+                        previousDate,
+                      ) ? (
+                        <TimelineYearMarker
+                          year={timelineYear(milestone.date)}
+                        />
+                      ) : null}
+                      <TimelineRow
+                        group={group}
+                        milestone={milestone}
+                        onSelect={() => onSelect(milestone.id)}
+                      />
+                    </Fragment>
+                  );
                 })}
               </div>
             </SortableContext>

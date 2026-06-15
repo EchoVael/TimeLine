@@ -4,14 +4,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { AlertTriangle, GripVertical } from "lucide-react";
 
 import { StatusBadge } from "../components/StatusBadge.js";
-
-function formatDate(date: string): string {
-  const [year, month, day] = date.split("-").map(Number);
-  return new Intl.DateTimeFormat("en", {
-    day: "numeric",
-    month: "short",
-  }).format(new Date(year ?? 0, (month ?? 1) - 1, day ?? 1));
-}
+import { formatTimelineDate } from "./timeline-utils.js";
 
 export function TimelineRow({
   group,
@@ -34,7 +27,9 @@ export function TimelineRow({
         transition: sortable.transition,
       }}
     >
-      <time dateTime={milestone.date}>{formatDate(milestone.date)}</time>
+      <time dateTime={milestone.date}>
+        {formatTimelineDate(milestone.date)}
+      </time>
       <div className="timelineRail" aria-hidden>
         <span
           className="timelineDot"

@@ -23,7 +23,7 @@ const groups: Group[] = [
 const milestones: Milestone[] = [
   {
     completedOn: null,
-    date: "2026-06-14",
+    date: "2025-12-31",
     dayOrder: 0,
     documentId: "doc-past",
     groupId: "group-thesis",
@@ -55,6 +55,18 @@ const milestones: Milestone[] = [
     overdue: false,
     status: "completed",
     title: "Completed review",
+    version: 1,
+  },
+  {
+    completedOn: null,
+    date: "2027-01-03",
+    dayOrder: 0,
+    documentId: "doc-next-year",
+    groupId: "group-thesis",
+    id: "next-year",
+    overdue: false,
+    status: "not_started",
+    title: "Final submission",
     version: 1,
   },
 ];
@@ -90,14 +102,26 @@ describe("TimelineView", () => {
     );
 
     expect(screen.getByText("Future draft")).toBeTruthy();
-    expect(screen.getByText("Thesis")).toBeTruthy();
+    expect(screen.getByText("Final submission")).toBeTruthy();
+    expect(screen.getAllByText("Thesis")).toHaveLength(2);
+    expect(
+      screen
+        .getAllByRole("separator", { name: /Year/ })
+        .map((marker) => marker.getAttribute("aria-label")),
+    ).toEqual(["Year 2026", "Year 2027"]);
     expect(screen.getByText("Jun 30")).toBeTruthy();
+    expect(screen.getByText("Jan 3")).toBeTruthy();
     expect(screen.queryByText("Past draft")).toBeNull();
     expect(screen.queryByText("Completed review")).toBeNull();
 
     await user.click(screen.getByRole("checkbox", { name: "Show past" }));
     expect(screen.getByText("Past draft")).toBeTruthy();
     expect(screen.getByLabelText("Overdue")).toBeTruthy();
+    expect(
+      screen
+        .getAllByRole("separator", { name: /Year/ })
+        .map((marker) => marker.getAttribute("aria-label")),
+    ).toEqual(["Year 2025", "Year 2026", "Year 2027"]);
 
     await user.click(screen.getByRole("checkbox", { name: "Show completed" }));
     expect(screen.getByText("Completed review")).toBeTruthy();
