@@ -141,6 +141,10 @@ textarea:focus-visible {
   border-left: 1px solid var(--border);
 }
 
+.detailsPane {
+  overflow: hidden;
+}
+
 .appShell[data-left-collapsed="true"] .projectsPane,
 .appShell[data-right-collapsed="true"] .detailsPane {
   visibility: hidden;
@@ -634,6 +638,154 @@ textarea:focus-visible {
   color: var(--muted);
   font-size: 12px;
   line-height: 1.5;
+}
+
+.dailyDetails {
+  min-height: 0;
+  overflow: auto;
+}
+
+.dailyDetailsHeader {
+  display: grid;
+  gap: 3px;
+  padding: 14px 12px 10px;
+}
+
+.dailyDetailsHeader h2 {
+  margin: 0;
+  font-size: 16px;
+  letter-spacing: 0;
+}
+
+.dailySection {
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--border);
+}
+
+.dailySection h3 {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.dailyGroupList,
+.dailyMilestoneList {
+  display: grid;
+  gap: 4px;
+}
+
+.dailyGroupOption {
+  display: grid;
+  grid-template-columns: 18px 12px minmax(0, 1fr);
+  min-height: 30px;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+}
+
+.dailyMilestone {
+  display: flex;
+  min-width: 0;
+  min-height: 30px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 12px;
+}
+
+.dailyMilestone > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dailySectionEmpty,
+.markdownEmpty {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.dailyEditor {
+  display: grid;
+  min-height: 320px;
+  grid-template-rows: 42px minmax(280px, 1fr);
+  border-top: 1px solid var(--border);
+}
+
+.dailyEditorToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 8px;
+}
+
+.dailyEditorToolbar .segmentedControl button {
+  min-width: 60px;
+  min-height: 28px;
+  font-size: 11px;
+}
+
+.saveStatus {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.saveStatus[data-status="Save failed"] {
+  color: #ba394c;
+}
+
+.dailyMarkdownInput {
+  width: 100%;
+  min-height: 280px;
+  padding: 12px;
+  border: 0;
+  border-top: 1px solid var(--border);
+  border-radius: 0;
+  color: inherit;
+  background: var(--surface-subtle);
+  font-family:
+    "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+  line-height: 1.55;
+  resize: vertical;
+}
+
+.markdownPreview {
+  min-height: 280px;
+  padding: 12px;
+  overflow-wrap: anywhere;
+  border-top: 1px solid var(--border);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.markdownPreview > :first-child {
+  margin-top: 0;
+}
+
+.markdownPreview h1 {
+  font-size: 19px;
+}
+
+.markdownPreview h2 {
+  font-size: 16px;
+}
+
+.markdownPreview img {
+  max-width: 100%;
+}
+
+.markdownPreview pre {
+  max-width: 100%;
+  padding: 8px;
+  overflow: auto;
+  background: var(--surface-subtle);
 }
 
 .todayMarker {

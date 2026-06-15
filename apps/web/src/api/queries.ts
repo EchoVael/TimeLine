@@ -2,12 +2,17 @@ import type {
   CalendarMonthResponse,
   CreateMilestoneRequest,
   CreateGroupRequest,
+  DailyNoteSummary,
+  DocumentPayload,
   Group,
   Milestone,
+  NewDailyDocumentDraft,
   ReorderGroupsRequest,
   ReorderMilestonesRequest,
+  SaveDailyDocumentRequest,
   UpdateMilestoneRequest,
   UpdateGroupRequest,
+  UpdateDailyNoteGroupsRequest,
   WeekStart,
 } from "@timemagic/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -64,6 +69,61 @@ export function useCalendar(
         `/calendar/${year}/${month}?${params.toString()}`,
       ),
     queryKey: ["calendar", year, month, weekStart, groupIds],
+  });
+}
+
+export function useDailyNote(date: string) {
+  return useQuery({
+    queryFn: () => apiRequest<DailyNoteSummary>(`/daily-notes/${date}`),
+    queryKey: ["daily-note", date],
+  });
+}
+
+export function useDailyDocument(date: string) {
+  return useQuery({
+    queryFn: () =>
+      apiRequest<DocumentPayload | NewDailyDocumentDraft>(
+        `/daily-notes/${date}/document`,
+      ),
+    queryKey: ["daily-document", date],
+  });
+}
+
+export function useSaveDailyDocument(date: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: SaveDailyDocumentRequest) =>
+      apiRequest<DocumentPayload>(`/daily-notes/${date}/document`, {
+        body: JSON.stringify(input),
+        method: "PUT",
+      }),
+    onSuccess: async (document) => {
+      queryClient.setQueryData(["daily-document", date], document);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["daily-note", date] }),
+        queryClient.invalidateQueries({ queryKey: ["calendar"] }),
+      ]);
+    },
+  });
+}
+
+export function useUpdateDailyNoteGroups(date: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: UpdateDailyNoteGroupsRequest) =>
+      apiRequest<DailyNoteSummary>(`/daily-notes/${date}/groups`, {
+        body: JSON.stringify(input),
+        method: "PATCH",
+      }),
+    onSuccess: async (summary) => {
+      queryClient.setQueryData(["daily-note", date], summary);
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["daily-document", date],
+        }),
+        queryClient.invalidateQueries({ queryKey: ["calendar"] }),
+      ]);
+    },
   });
 }
 

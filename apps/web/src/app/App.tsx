@@ -12,6 +12,7 @@ import { useGroups, useMilestones } from "../api/queries.js";
 import { CalendarView } from "../calendar/CalendarView.js";
 import { IconButton } from "../components/IconButton.js";
 import { SegmentedControl } from "../components/SegmentedControl.js";
+import { DailyDetails } from "../daily/DailyDetails.js";
 import { GroupDetails } from "../groups/GroupDetails.js";
 import { GroupSidebar } from "../groups/GroupSidebar.js";
 import { MilestoneDetails } from "../milestones/MilestoneDetails.js";
@@ -189,9 +190,10 @@ export function App() {
           ) : selectedGroup ? (
             <GroupDetails group={selectedGroup} />
           ) : selectedDate ? (
-            <div className="emptyState">
-              <p>{selectedDate}</p>
-            </div>
+            <DailyDetails
+              date={selectedDate}
+              groups={groups.data?.items ?? []}
+            />
           ) : (
             <div className="emptyState">
               <p>Select a project or milestone.</p>
