@@ -1,5 +1,6 @@
 import Fastify, { type FastifyInstance } from "fastify";
 
+import { registerCalendarRoutes } from "./calendar/calendar.routes.js";
 import type { AppOptions } from "./config.js";
 import { registerDailyNoteRoutes } from "./daily-notes/daily-note.routes.js";
 import { createDatabase } from "./db/client.js";
@@ -73,6 +74,7 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
   registerGroupRoutes(app, database);
   registerMilestoneRoutes(app, database, options);
   registerDailyNoteRoutes(app, database, options);
+  registerCalendarRoutes(app, database);
 
   return app;
 }

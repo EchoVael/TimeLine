@@ -1,4 +1,12 @@
-import { and, asc, eq, isNull, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  eq,
+  gte,
+  isNull,
+  lte,
+  sql,
+} from "drizzle-orm";
 
 import type { SqliteDatabase } from "../db/client.js";
 import { documents, milestones } from "../db/schema.js";
@@ -29,6 +37,21 @@ export class MilestoneRepository {
       .from(milestones)
       .where(and(eq(milestones.date, date), isNull(milestones.deletedAt)))
       .orderBy(asc(milestones.dayOrder))
+      .all();
+  }
+
+  listRange(from: string, to: string): MilestoneRecord[] {
+    return this.database.orm
+      .select()
+      .from(milestones)
+      .where(
+        and(
+          gte(milestones.date, from),
+          lte(milestones.date, to),
+          isNull(milestones.deletedAt),
+        ),
+      )
+      .orderBy(asc(milestones.date), asc(milestones.dayOrder))
       .all();
   }
 

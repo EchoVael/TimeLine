@@ -1,4 +1,13 @@
-import { and, asc, eq, inArray, isNull, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  eq,
+  gte,
+  inArray,
+  isNull,
+  lte,
+  sql,
+} from "drizzle-orm";
 
 import type { SqliteDatabase } from "../db/client.js";
 import {
@@ -35,6 +44,15 @@ export class DailyNoteRepository {
       .from(dailyNotes)
       .where(eq(dailyNotes.date, date))
       .get();
+  }
+
+  listRange(from: string, to: string): DailyNoteRecord[] {
+    return this.database.orm
+      .select()
+      .from(dailyNotes)
+      .where(and(gte(dailyNotes.date, from), lte(dailyNotes.date, to)))
+      .orderBy(asc(dailyNotes.date))
+      .all();
   }
 
   findDocument(id: string): DocumentRecord | undefined {
