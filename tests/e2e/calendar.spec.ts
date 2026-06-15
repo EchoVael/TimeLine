@@ -122,3 +122,36 @@ test("creates and persists a multi-project daily Markdown note", async ({
     });
   }
 });
+
+test("switches calendar month and year directly", async ({
+  page,
+}, testInfo) => {
+  const mobile = testInfo.project.name === "mobile";
+  await page.goto("/#token=e2e-token");
+  await openCalendar(page, mobile);
+
+  const year = page.getByRole("combobox", { name: "Year" });
+  const month = page.getByRole("combobox", { name: "Month" });
+
+  await month.selectOption("12");
+  await year.selectOption("2027");
+  await expect(page.getByRole("grid", { name: "December 2027" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Next month" }).click();
+  await expect(year).toHaveValue("2028");
+  await expect(month).toHaveValue("1");
+
+  await page.getByRole("button", { name: "Previous month" }).click();
+  await expect(year).toHaveValue("2027");
+  await expect(month).toHaveValue("12");
+
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - window.innerWidth,
+  );
+  expect(overflow).toBeLessThanOrEqual(0);
+
+  await page.screenshot({
+    fullPage: true,
+    path: testInfo.outputPath(`calendar-period-${testInfo.project.name}.png`),
+  });
+});
