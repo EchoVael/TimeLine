@@ -1,5 +1,5 @@
 import type { ChangeEvent } from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Group, LocalDate } from "@timemagic/shared";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -17,6 +17,7 @@ import {
 
 interface CalendarViewProps {
   groups: Group[];
+  initialDate?: LocalDate;
   onSelectDate: (date: LocalDate) => void;
   selectedDate: LocalDate | null;
   today: LocalDate;
@@ -27,13 +28,16 @@ const weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 export function CalendarView({
   groups,
+  initialDate,
   onSelectDate,
   selectedDate,
   today,
   visibleGroupIds,
 }: CalendarViewProps) {
+  const cursorDate = initialDate ?? today;
   const todayCursor = cursorFromDate(today);
-  const [cursor, setCursor] = useState(todayCursor);
+  const [cursor, setCursor] = useState(() => cursorFromDate(cursorDate));
+  const lastInitialDate = useRef(cursorDate);
   const [creatingDate, setCreatingDate] = useState<LocalDate | null>(null);
   const calendar = useCalendar(
     cursor.year,
@@ -49,6 +53,13 @@ export function CalendarView({
     visibleGroupIds.includes(id),
   );
   const yearOptions = calendarYearOptions(cursor.year);
+
+  useEffect(() => {
+    if (lastInitialDate.current !== cursorDate) {
+      lastInitialDate.current = cursorDate;
+      setCursor(cursorFromDate(cursorDate));
+    }
+  }, [cursorDate]);
 
   function handleYearChange(event: ChangeEvent<HTMLSelectElement>) {
     const year = Number(event.currentTarget.value);

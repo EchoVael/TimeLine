@@ -1,33 +1,71 @@
+import type { CalendarMonthResponse, Group, Milestone } from "@timemagic/shared";
+import { calendarDates } from "@timemagic/shared";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 import { App } from "./App.js";
 
+const groups: Group[] = [
+  {
+    archivedAt: null,
+    color: "#177d67",
+    description: "",
+    id: "group-thesis",
+    name: "Thesis",
+    sortOrder: 0,
+    version: 1,
+  },
+];
+
+const milestones: Milestone[] = [
+  {
+    completedOn: null,
+    date: "2027-01-03",
+    dayOrder: 0,
+    documentId: "doc-final",
+    groupId: "group-thesis",
+    id: "milestone-final",
+    overdue: false,
+    status: "not_started",
+    title: "Final submission",
+    version: 1,
+  },
+];
+
+function calendarResponse(
+  year: number,
+  month: number,
+): CalendarMonthResponse {
+  return {
+    days: calendarDates(year, month, "monday").map((date) => ({
+      date,
+      firstMilestoneTitle:
+        date === "2027-01-03" ? "Final submission" : null,
+      groupIds: date === "2027-01-03" ? ["group-thesis"] : [],
+      hasDailyNote: false,
+      milestoneCount: date === "2027-01-03" ? 1 : 0,
+      overflowCount: 0,
+    })),
+    month,
+    year,
+  };
+}
+
 vi.mock("../api/queries.js", () => ({
   useCreateGroup: () => ({ isPending: false, mutateAsync: vi.fn() }),
   useGroups: () => ({
-    data: { items: [], nextCursor: null },
+    data: { items: groups, nextCursor: null },
     isLoading: false,
   }),
   useMilestones: () => ({
-    data: { items: [], nextCursor: null },
+    data: { items: milestones, nextCursor: null },
     isLoading: false,
   }),
   useCreateMilestone: () => ({ isPending: false, mutateAsync: vi.fn() }),
-  useCalendar: () => ({
-    data: {
-      days: Array.from({ length: 42 }, (_, index) => ({
-        date: `2026-06-${String(index + 1).padStart(2, "0")}`,
-        firstMilestoneTitle: null,
-        groupIds: [],
-        hasDailyNote: false,
-        milestoneCount: 0,
-        overflowCount: 0,
-      })),
-      month: 6,
-      year: 2026,
-    },
+  useUpdateMilestone: () => ({ isPending: false, mutateAsync: vi.fn() }),
+  useCalendar: (year: number, month: number) => ({
+    data: calendarResponse(year, month),
     isLoading: false,
   }),
   useReorderMilestones: () => ({ mutateAsync: vi.fn() }),
@@ -74,5 +112,41 @@ describe("App", () => {
     expect(
       screen.getByRole("main", { name: "Calendar" }),
     ).toBeTruthy();
+  });
+
+  it("opens Calendar on the selected Timeline milestone month", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(
+      screen.getByRole("button", { name: "Open Final submission" }),
+    );
+    expect(
+      within(
+        screen.getByRole("complementary", { name: "Details" }),
+      ).getByLabelText("Short title"),
+    ).toHaveProperty("value", "Final submission");
+
+    await user.click(
+      within(screen.getByRole("group", { name: "Primary view" })).getByRole(
+        "button",
+        { name: "Calendar" },
+      ),
+    );
+
+    expect(screen.getByRole("combobox", { name: "Year" })).toHaveProperty(
+      "value",
+      "2027",
+    );
+    expect(screen.getByRole("combobox", { name: "Month" })).toHaveProperty(
+      "value",
+      "1",
+    );
+    expect(screen.getByRole("grid", { name: "January 2027" })).toBeTruthy();
+    expect(
+      within(
+        screen.getByRole("complementary", { name: "Details" }),
+      ).getByLabelText("Short title"),
+    ).toHaveProperty("value", "Final submission");
   });
 });

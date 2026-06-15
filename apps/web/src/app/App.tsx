@@ -162,6 +162,7 @@ export function App() {
           ) : (
             <CalendarView
               groups={activeGroups}
+              initialDate={selectedMilestone?.date}
               onSelectDate={(date) => {
                 setSelectedDate(date);
                 setSelectedGroupId(null);

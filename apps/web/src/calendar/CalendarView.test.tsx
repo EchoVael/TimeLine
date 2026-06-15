@@ -137,6 +137,36 @@ describe("CalendarView", () => {
     expect(month).toHaveProperty("value", "6");
   });
 
+  it("starts from an initial date without overriding manual navigation", async () => {
+    const user = userEvent.setup();
+    const props = {
+      groups,
+      onSelectDate: vi.fn(),
+      selectedDate: null,
+      today: "2026-06-16" as const,
+      visibleGroupIds: groups.map(({ id }) => id),
+    };
+    const { rerender } = render(
+      <CalendarView
+        {...props}
+        initialDate="2027-01-03"
+      />,
+    );
+
+    expect(screen.getByRole("grid", { name: "January 2027" })).toBeTruthy();
+
+    await user.click(screen.getByRole("button", { name: "Today" }));
+    expect(screen.getByRole("grid", { name: "June 2026" })).toBeTruthy();
+
+    rerender(
+      <CalendarView
+        {...props}
+        initialDate="2027-01-03"
+      />,
+    );
+    expect(screen.getByRole("grid", { name: "June 2026" })).toBeTruthy();
+  });
+
   it("selects a date and opens milestone creation prefilled to it", async () => {
     const user = userEvent.setup();
     const onSelectDate = vi.fn();
