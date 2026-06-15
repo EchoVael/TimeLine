@@ -1,6 +1,7 @@
 import Fastify, { type FastifyInstance } from "fastify";
 
 import type { AppOptions } from "./config.js";
+import { registerDailyNoteRoutes } from "./daily-notes/daily-note.routes.js";
 import { createDatabase } from "./db/client.js";
 import { migrateDatabase } from "./db/migrate.js";
 import { registerGroupRoutes } from "./groups/group.routes.js";
@@ -71,6 +72,7 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
 
   registerGroupRoutes(app, database);
   registerMilestoneRoutes(app, database, options);
+  registerDailyNoteRoutes(app, database, options);
 
   return app;
 }

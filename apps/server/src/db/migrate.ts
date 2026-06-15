@@ -54,5 +54,23 @@ export function migrateDatabase(database: SqliteDatabase): void {
       ON milestones (group_id, deleted_at, date);
     CREATE INDEX IF NOT EXISTS milestones_status_date_idx
       ON milestones (status, deleted_at, date);
+
+    CREATE TABLE IF NOT EXISTS daily_notes (
+      date TEXT PRIMARY KEY,
+      document_id TEXT NOT NULL UNIQUE REFERENCES documents(id),
+      version INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS daily_note_groups (
+      date TEXT NOT NULL REFERENCES daily_notes(date),
+      group_id TEXT NOT NULL REFERENCES groups(id),
+      created_at TEXT NOT NULL,
+      PRIMARY KEY (date, group_id)
+    );
+
+    CREATE INDEX IF NOT EXISTS daily_note_groups_group_idx
+      ON daily_note_groups (group_id, date);
   `);
 }

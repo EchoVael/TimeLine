@@ -1,4 +1,10 @@
-import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import {
+  index,
+  integer,
+  primaryKey,
+  sqliteTable,
+  text,
+} from "drizzle-orm/sqlite-core";
 
 export const groups = sqliteTable(
   "groups",
@@ -79,5 +85,33 @@ export const milestones = sqliteTable(
       table.deletedAt,
       table.date,
     ),
+  ],
+);
+
+export const dailyNotes = sqliteTable("daily_notes", {
+  date: text("date").primaryKey(),
+  documentId: text("document_id")
+    .notNull()
+    .unique()
+    .references(() => documents.id),
+  version: integer("version").notNull().default(1),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+});
+
+export const dailyNoteGroups = sqliteTable(
+  "daily_note_groups",
+  {
+    date: text("date")
+      .notNull()
+      .references(() => dailyNotes.date),
+    groupId: text("group_id")
+      .notNull()
+      .references(() => groups.id),
+    createdAt: text("created_at").notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.date, table.groupId] }),
+    index("daily_note_groups_group_idx").on(table.groupId, table.date),
   ],
 );
