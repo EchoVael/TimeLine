@@ -6,26 +6,31 @@ import type {
   MilestoneStatus,
 } from "@timemagic/shared";
 
-import { useUpdateMilestone } from "../api/queries.js";
+import { useDeleteMilestone, useUpdateMilestone } from "../api/queries.js";
 
 export function MilestoneDetails({
   groups,
   milestone,
+  onDeleted,
 }: {
   groups: Group[];
   milestone: Milestone;
+  onDeleted?: () => void;
 }) {
   const update = useUpdateMilestone(milestone.id);
+  const deleteMilestone = useDeleteMilestone(milestone.id);
   const [title, setTitle] = useState(milestone.title);
   const [date, setDate] = useState<LocalDate>(milestone.date);
   const [groupId, setGroupId] = useState(milestone.groupId);
   const [status, setStatus] = useState<MilestoneStatus>(milestone.status);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
     setTitle(milestone.title);
     setDate(milestone.date);
     setGroupId(milestone.groupId);
     setStatus(milestone.status);
+    setConfirmDelete(false);
   }, [milestone]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -37,6 +42,11 @@ export function MilestoneDetails({
       status,
       title: title.trim(),
     });
+  }
+
+  async function confirmDeleteMilestone() {
+    await deleteMilestone.mutateAsync(milestone.version);
+    onDeleted?.();
   }
 
   return (
@@ -100,6 +110,38 @@ export function MilestoneDetails({
       >
         Save milestone
       </button>
+      {confirmDelete ? (
+        <div className="deleteConfirmation">
+          <p>Delete this milestone from the timeline?</p>
+          <div className="inlineActions">
+            <button
+              className="dangerButton"
+              disabled={deleteMilestone.isPending}
+              onClick={() => void confirmDeleteMilestone()}
+              type="button"
+            >
+              Confirm delete
+            </button>
+            <button
+              className="textButton"
+              disabled={deleteMilestone.isPending}
+              onClick={() => setConfirmDelete(false)}
+              type="button"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          className="dangerButton"
+          disabled={deleteMilestone.isPending}
+          onClick={() => setConfirmDelete(true)}
+          type="button"
+        >
+          Delete milestone
+        </button>
+      )}
       <div className="documentPlaceholder">
         Markdown editing arrives in the next development slice.
       </div>

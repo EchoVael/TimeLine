@@ -50,6 +50,10 @@ export const updateMilestoneRequestSchema = z
     "At least one milestone field must change",
   );
 
+export const deleteMilestoneRequestSchema = z.object({
+  expectedVersion: z.number().int().positive(),
+});
+
 export const milestoneListQuerySchema = z.object({
   from: localDateSchema.optional(),
   to: localDateSchema.optional(),
@@ -84,6 +88,9 @@ export type CreateMilestoneRequest = z.infer<
 >;
 export type UpdateMilestoneRequest = z.infer<
   typeof updateMilestoneRequestSchema
+>;
+export type DeleteMilestoneRequest = z.infer<
+  typeof deleteMilestoneRequestSchema
 >;
 export type MilestoneListQuery = z.infer<typeof milestoneListQuerySchema>;
 export type ReorderMilestonesRequest = z.infer<

@@ -133,6 +133,29 @@ export class MilestoneRepository {
     });
   }
 
+  softDelete(
+    id: string,
+    expectedVersion: number,
+    deletedAt: string,
+  ): MilestoneRecord | undefined {
+    return this.database.orm
+      .update(milestones)
+      .set({
+        deletedAt,
+        updatedAt: deletedAt,
+        version: sql`${milestones.version} + 1`,
+      })
+      .where(
+        and(
+          eq(milestones.id, id),
+          eq(milestones.version, expectedVersion),
+          isNull(milestones.deletedAt),
+        ),
+      )
+      .returning()
+      .get();
+  }
+
   reorder(
     date: string,
     orderedIds: string[],

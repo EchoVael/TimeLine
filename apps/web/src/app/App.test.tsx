@@ -2,9 +2,11 @@ import type { CalendarMonthResponse, Group, Milestone } from "@timemagic/shared"
 import { calendarDates } from "@timemagic/shared";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { App } from "./App.js";
+
+const deleteMilestone = vi.fn();
 
 const groups: Group[] = [
   {
@@ -63,6 +65,10 @@ vi.mock("../api/queries.js", () => ({
     isLoading: false,
   }),
   useCreateMilestone: () => ({ isPending: false, mutateAsync: vi.fn() }),
+  useDeleteMilestone: () => ({
+    isPending: false,
+    mutateAsync: deleteMilestone,
+  }),
   useUpdateMilestone: () => ({ isPending: false, mutateAsync: vi.fn() }),
   useCalendar: (year: number, month: number) => ({
     data: calendarResponse(year, month),
@@ -73,6 +79,11 @@ vi.mock("../api/queries.js", () => ({
 }));
 
 describe("App", () => {
+  beforeEach(() => {
+    deleteMilestone.mockReset();
+    deleteMilestone.mockResolvedValue({ deleted: true, id: "milestone-final" });
+  });
+
   it("renders the three-pane workspace and switches primary views", async () => {
     const user = userEvent.setup();
     render(<App />);
@@ -148,5 +159,23 @@ describe("App", () => {
         screen.getByRole("complementary", { name: "Details" }),
       ).getByLabelText("Short title"),
     ).toHaveProperty("value", "Final submission");
+  });
+
+  it("clears the selected milestone after deleting it", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(
+      screen.getByRole("button", { name: "Open Final submission" }),
+    );
+    await user.click(screen.getByRole("button", { name: "Delete milestone" }));
+    await user.click(screen.getByRole("button", { name: "Confirm delete" }));
+
+    expect(deleteMilestone).toHaveBeenCalledWith(1);
+    expect(
+      within(screen.getByRole("complementary", { name: "Details" })).getByText(
+        "Select a project or milestone.",
+      ),
+    ).toBeTruthy();
   });
 });

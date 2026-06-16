@@ -3,6 +3,7 @@ import type {
   CreateMilestoneRequest,
   CreateGroupRequest,
   DailyNoteSummary,
+  DeleteMilestoneRequest,
   DocumentPayload,
   Group,
   Milestone,
@@ -237,6 +238,24 @@ export function useUpdateMilestone(milestoneId: string) {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["milestones"] }),
         queryClient.invalidateQueries({ queryKey: ["calendar"] }),
+      ]);
+    },
+  });
+}
+
+export function useDeleteMilestone(milestoneId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (expectedVersion: DeleteMilestoneRequest["expectedVersion"]) =>
+      apiRequest<{ deleted: true; id: string }>(`/milestones/${milestoneId}`, {
+        body: JSON.stringify({ expectedVersion }),
+        method: "DELETE",
+      }),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["milestones"] }),
+        queryClient.invalidateQueries({ queryKey: ["calendar"] }),
+        queryClient.invalidateQueries({ queryKey: ["daily-note"] }),
       ]);
     },
   });

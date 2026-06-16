@@ -1,5 +1,6 @@
 import {
   createMilestoneRequestSchema,
+  deleteMilestoneRequestSchema,
   milestoneListQuerySchema,
   reorderMilestonesRequestSchema,
   updateMilestoneRequestSchema,
@@ -75,6 +76,15 @@ export function registerMilestoneRoutes(
       service.update(
         request.params.milestoneId,
         parse(updateMilestoneRequestSchema, request.body),
+      ),
+  );
+
+  app.delete<{ Params: { milestoneId: string } }>(
+    "/api/v1/milestones/:milestoneId",
+    async (request) =>
+      service.delete(
+        request.params.milestoneId,
+        parse(deleteMilestoneRequestSchema, request.body),
       ),
   );
 }

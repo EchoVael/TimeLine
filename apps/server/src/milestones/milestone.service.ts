@@ -1,5 +1,6 @@
 import type {
   CreateMilestoneRequest,
+  DeleteMilestoneRequest,
   LocalDate,
   Milestone,
   MilestoneListQuery,
@@ -212,6 +213,25 @@ export class MilestoneService {
       );
       throw error;
     }
+  }
+
+  delete(id: string, input: DeleteMilestoneRequest) {
+    const current = this.requireMilestone(id);
+    if (current.version !== input.expectedVersion) {
+      throw this.versionConflict(current);
+    }
+
+    const deleted = this.repository.softDelete(
+      id,
+      input.expectedVersion,
+      new Date().toISOString(),
+    );
+    if (!deleted) {
+      throw this.versionConflict(this.requireMilestone(id));
+    }
+    this.repository.normalizeDate(current.date);
+
+    return { deleted: true, id };
   }
 
   reorder(input: ReorderMilestonesRequest): Milestone[] {

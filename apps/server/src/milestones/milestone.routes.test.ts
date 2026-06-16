@@ -203,4 +203,67 @@ describe("milestone routes", () => {
       { id: first.id, dayOrder: 1, version: 2 },
     ]);
   });
+
+  it("soft deletes a milestone and hides it from future lists", async () => {
+    const group = await createGroup();
+    const first = (
+      await createMilestone(group.id, "First draft", "2026-06-30")
+    ).milestone;
+    const review = (
+      await createMilestone(group.id, "Review", "2026-06-30")
+    ).milestone;
+
+    const response = await inject({
+      method: "DELETE",
+      payload: { expectedVersion: first.version },
+      url: `/api/v1/milestones/${first.id}`,
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toEqual({ deleted: true, id: first.id });
+
+    const list = await inject({
+      method: "GET",
+      url: "/api/v1/milestones?includePast=true",
+    });
+    expect(
+      list.json().items.map((item: { id: string; title: string }) => ({
+        id: item.id,
+        title: item.title,
+      })),
+    ).toEqual([{ id: review.id, title: "Review" }]);
+  });
+
+  it("rejects stale milestone deletes", async () => {
+    const group = await createGroup();
+    const { milestone } = await createMilestone(
+      group.id,
+      "First draft",
+      "2026-06-30",
+    );
+
+    const updated = await inject({
+      method: "PATCH",
+      payload: {
+        expectedVersion: milestone.version,
+        title: "Revised draft",
+      },
+      url: `/api/v1/milestones/${milestone.id}`,
+    });
+    expect(updated.statusCode).toBe(200);
+
+    const response = await inject({
+      method: "DELETE",
+      payload: { expectedVersion: milestone.version },
+      url: `/api/v1/milestones/${milestone.id}`,
+    });
+
+    expect(response.statusCode).toBe(409);
+    expect(response.json()).toMatchObject({
+      error: {
+        code: "VERSION_CONFLICT",
+        messageKey: "milestones.version",
+      },
+    });
+  });
 });

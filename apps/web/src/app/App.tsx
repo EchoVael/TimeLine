@@ -192,6 +192,11 @@ export function App() {
             <MilestoneDetails
               groups={activeGroups}
               milestone={selectedMilestone}
+              onDeleted={() => {
+                setSelectedMilestoneId(null);
+                setSelectedDate(null);
+                setMobilePane("details");
+              }}
             />
           ) : selectedGroup ? (
             <GroupDetails group={selectedGroup} />
