@@ -137,7 +137,17 @@ export class MilestoneService {
       throw this.versionConflict(current);
     }
 
-    const group = this.requireActiveGroup(input.groupId ?? current.groupId);
+    const changingGroup =
+      input.groupId !== undefined && input.groupId !== current.groupId;
+    const group = this.groups.findById(input.groupId ?? current.groupId);
+    if (!group || (changingGroup && group.archivedAt)) {
+      throw new ApiError(
+        422,
+        "VALIDATION_FAILED",
+        "milestones.group.active",
+      );
+    }
+
     const date = input.date ?? (current.date as LocalDate);
     const status = input.status ?? current.status;
     const completedOn =

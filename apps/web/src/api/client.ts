@@ -43,19 +43,30 @@ export async function apiRequest<T>(
   });
 
   if (!response.ok) {
-    const payload = (await response.json()) as {
-      error: {
-        code: string;
-        details?: Record<string, unknown>;
-        messageKey: string;
+    let code = "UNKNOWN_ERROR";
+    let messageKey = "server.unexpected";
+    let details: Record<string, unknown> | undefined;
+
+    try {
+      const payload = (await response.json()) as {
+        error?: {
+          code?: string;
+          details?: Record<string, unknown>;
+          messageKey?: string;
+        };
       };
-    };
-    throw new ApiClientError(
-      response.status,
-      payload.error.code,
-      payload.error.messageKey,
-      payload.error.details,
-    );
+      code = payload.error?.code ?? code;
+      messageKey = payload.error?.messageKey ?? messageKey;
+      details = payload.error?.details;
+    } catch {
+      // Non-JSON error bodies (proxies, gateway HTML) carry no structured code.
+    }
+
+    throw new ApiClientError(response.status, code, messageKey, details);
+  }
+
+  if (response.status === 204) {
+    return undefined as T;
   }
 
   return response.json() as Promise<T>;

@@ -46,8 +46,8 @@ export function App() {
   );
   const [selectedDate, setSelectedDate] = useState<LocalDate | null>(null);
   const [visibleGroupIds, setVisibleGroupIds] = useState<string[] | null>(null);
-  const activeGroups =
-    groups.data?.items.filter(({ archivedAt }) => !archivedAt) ?? [];
+  const allGroups = groups.data?.items ?? [];
+  const activeGroups = allGroups.filter(({ archivedAt }) => !archivedAt);
   const allGroupIds = activeGroups.map(({ id }) => id);
   const activeGroupIdSet = new Set(allGroupIds);
   const effectiveVisibleGroupIds = (
@@ -190,7 +190,7 @@ export function App() {
           </div>
           {selectedMilestone ? (
             <MilestoneDetails
-              groups={activeGroups}
+              groups={allGroups}
               milestone={selectedMilestone}
               onDeleted={() => {
                 setSelectedMilestoneId(null);

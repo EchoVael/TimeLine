@@ -61,9 +61,9 @@ export const milestoneListQuerySchema = z.object({
   status: z
     .union([milestoneStatusSchema, z.array(milestoneStatusSchema)])
     .optional(),
-  includePast: z.coerce.boolean().default(false),
-  includeCompleted: z.coerce.boolean().default(false),
-  includeCancelled: z.coerce.boolean().default(false),
+  includePast: z.boolean().default(false),
+  includeCompleted: z.boolean().default(false),
+  includeCancelled: z.boolean().default(false),
   cursor: z.string().optional(),
   limit: z.coerce.number().int().min(1).max(200).default(100),
 });

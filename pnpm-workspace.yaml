@@ -2,6 +2,9 @@ packages:
   - apps/*
   - packages/*
 
+nodeVersion: 24.20.0
+engineStrict: true
+
 allowBuilds:
   better-sqlite3: true
   esbuild: true

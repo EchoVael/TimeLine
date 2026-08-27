@@ -9,9 +9,21 @@ import { registerGroupRoutes } from "./groups/group.routes.js";
 import { ApiError } from "./lib/api-error.js";
 import { registerMilestoneRoutes } from "./milestones/milestone.routes.js";
 
+function isFilesystemError(error: unknown): boolean {
+  if (typeof error !== "object" || error === null) {
+    return false;
+  }
+  const code = (error as { code?: unknown }).code;
+  return (
+    typeof code === "string" &&
+    /^[A-Z][A-Z0-9_]+$/.test(code) &&
+    !code.startsWith("SQLITE")
+  );
+}
+
 export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
   const app = Fastify({
-    logger: false,
+    logger: { level: "error" },
     requestIdHeader: "x-request-id",
   });
   const database = createDatabase(options.dataRoot);
@@ -36,7 +48,7 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
     request.log.error(error);
     return reply.status(500).send({
       error: {
-        code: "DATABASE_FAILED",
+        code: isFilesystemError(error) ? "FILESYSTEM_FAILED" : "DATABASE_FAILED",
         messageKey: "server.unexpected",
         requestId: request.id,
       },

@@ -48,7 +48,7 @@ export const dailyNoteSummarySchema = z.object({
 export const saveDailyDocumentRequestSchema = z.object({
   markdown: z.string(),
   expectedRevision: z.string().nullable(),
-  conflictStrategy: z.enum(["overwrite", "save_copy"]).optional(),
+  conflictStrategy: z.enum(["overwrite"]).optional(),
 });
 
 export const updateDailyNoteGroupsRequestSchema = z

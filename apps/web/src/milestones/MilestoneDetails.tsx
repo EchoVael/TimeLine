@@ -74,7 +74,13 @@ export function MilestoneDetails({
           value={groupId}
         >
           {groups.map((group) => (
-            <option key={group.id} value={group.id}>
+            <option
+              disabled={
+                Boolean(group.archivedAt) && group.id !== milestone.groupId
+              }
+              key={group.id}
+              value={group.id}
+            >
               {group.name}
             </option>
           ))}

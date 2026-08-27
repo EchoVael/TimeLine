@@ -23,6 +23,14 @@ Timeline is intentionally dense: milestones are vertical, ordered by date, inclu
 
 Calendar shows a six-week month grid with direct year/month controls, milestone summaries, project color markers, daily note markers, and quick milestone creation for a day.
 
+### Timeline
+
+![TimeMagic timeline view](imgs/timeline-desktop.png)
+
+### Calendar and Daily Notes
+
+![TimeMagic calendar and daily note details](imgs/daily-details-desktop.png)
+
 ## Tech Stack
 
 - Monorepo: `pnpm` workspaces
@@ -49,11 +57,34 @@ data/           Local development database and Markdown documents
 
 ## Local Development
 
+The workspace pins Node.js 24.20.0 through pnpm. On the first install, pnpm
+downloads that runtime into its own store and uses it for project scripts. This
+does not replace a Homebrew or system Node installation and does not modify your
+shell `PATH`.
+
 Install dependencies:
 
 ```bash
 pnpm install
 ```
+
+Before running the end-to-end tests for the first time, install the Playwright
+browsers:
+
+```bash
+pnpm exec playwright install
+```
+
+Confirm the project runtime and native SQLite addon before starting:
+
+```bash
+pnpm exec node -v
+pnpm check:native
+```
+
+The expected Node version is `v24.20.0`. The native check runs automatically
+before `pnpm dev`; if the Node ABI changes during an intentional runtime
+upgrade, rebuild the addon with `pnpm rebuild better-sqlite3`.
 
 Run the app:
 
@@ -108,6 +139,7 @@ pnpm exec concurrently -k -n server,web \
 
 ```bash
 pnpm build
+pnpm check:native
 pnpm typecheck
 pnpm test
 pnpm test:e2e

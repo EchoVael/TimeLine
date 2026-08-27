@@ -41,7 +41,6 @@ export function TimelineView({
   visibleGroupIds,
 }: TimelineViewProps) {
   const milestones = useMilestones({
-    groupIds: visibleGroupIds,
     includeCancelled: true,
     includeCompleted: true,
     includePast: true,

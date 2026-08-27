@@ -2,8 +2,20 @@
   "name": "timemagic",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": "24.x"
+  },
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": "24.20.0",
+      "onFail": "download"
+    }
+  },
   "packageManager": "pnpm@11.1.2",
   "scripts": {
+    "check:native": "pnpm --filter @timemagic/server exec node -e \"const Database=require('better-sqlite3');const db=new Database(':memory:');db.close();console.log('better-sqlite3 OK on '+process.version+' ABI '+process.versions.modules)\"",
+    "predev": "pnpm check:native",
     "dev": "TIMEMAGIC_STARTUP_TOKEN=timemagic-dev TIMEMAGIC_DATA_ROOT=../../data concurrently -k -n server,web \"pnpm --filter @timemagic/server dev\" \"pnpm --filter @timemagic/web dev\"",
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
@@ -12,6 +24,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.60.0",
+    "@types/node": "^24.0.0",
     "concurrently": "^10.0.3",
     "typescript": "^6.0.3",
     "vitest": "^4.1.8"
