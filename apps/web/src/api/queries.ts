@@ -221,6 +221,7 @@ export function useCreateMilestone() {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["milestones"] }),
         queryClient.invalidateQueries({ queryKey: ["calendar"] }),
+        queryClient.invalidateQueries({ queryKey: ["daily-note"] }),
       ]);
     },
   });
@@ -238,6 +239,7 @@ export function useUpdateMilestone(milestoneId: string) {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["milestones"] }),
         queryClient.invalidateQueries({ queryKey: ["calendar"] }),
+        queryClient.invalidateQueries({ queryKey: ["daily-note"] }),
       ]);
     },
   });

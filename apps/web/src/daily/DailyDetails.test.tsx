@@ -7,6 +7,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import {
   afterEach,
+  beforeAll,
   beforeEach,
   describe,
   expect,
@@ -141,6 +142,14 @@ describe("DailyDetails", () => {
 });
 
 describe("DailyEditor", () => {
+  beforeAll(() => {
+    // jsdom does not implement native dialog methods; keyboard/focus behavior
+    // is covered by the browser test.
+    Object.defineProperties(HTMLDialogElement.prototype, {
+      showModal: { configurable: true, value(this: HTMLDialogElement) { this.open = true; } },
+      close: { configurable: true, value(this: HTMLDialogElement) { this.open = false; } },
+    });
+  });
   beforeEach(() => {
     vi.useFakeTimers();
     window.localStorage.clear();
@@ -186,6 +195,50 @@ describe("DailyEditor", () => {
       screen.getByRole("heading", { name: "Work log" }),
     ).toBeTruthy();
     expect(screen.getByText("Reviewed outline.")).toBeTruthy();
+  });
+
+  it("expands with live preview and preserves unsaved text across modes and closing", async () => {
+    render(<DailyEditor date="2026-06-16" document={document} />);
+    fireEvent.click(screen.getByRole("button", { name: "Expand editor" }));
+    const dialog = screen.getByRole("dialog", { name: "Daily note for 2026-06-16" });
+    expect(dialog).toHaveProperty("open", true);
+    expect(screen.getByRole("button", { name: "Split" })).toHaveProperty("ariaPressed", "true");
+
+    fireEvent.change(screen.getByRole("textbox", { name: "Daily Markdown" }), {
+      target: { value: "# Live draft\n\nUnsaved changes." },
+    });
+    expect(screen.getByRole("heading", { name: "Live draft" })).toBeTruthy();
+    expect(saveDocument).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Preview" }));
+    expect(screen.queryByRole("textbox", { name: "Daily Markdown" })).toBeNull();
+    expect(screen.getByText("Unsaved changes.")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+    expect(screen.queryByRole("region", { name: "Markdown preview" })).toBeNull();
+    expect(screen.getByRole("textbox", { name: "Daily Markdown" })).toHaveProperty("value", "# Live draft\n\nUnsaved changes.");
+
+    fireEvent.click(screen.getByRole("button", { name: "Split" }));
+    fireEvent.click(screen.getByRole("button", { name: "Close expanded editor" }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(screen.queryByRole("region", { name: "Markdown preview" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Split" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Expand editor" })).toBe(window.document.activeElement);
+    expect(screen.getByRole("textbox", { name: "Daily Markdown" })).toHaveProperty("value", "# Live draft\n\nUnsaved changes.");
+    await act(async () => { await vi.advanceTimersByTimeAsync(700); });
+    expect(saveDocument).toHaveBeenCalledTimes(1);
+    expect(saveDocument).toHaveBeenCalledWith({
+      expectedRevision: "revision-1", markdown: "# Live draft\n\nUnsaved changes.",
+    });
+  });
+
+  it("returns to inline preview on Escape without losing the draft", () => {
+    render(<DailyEditor date="2026-06-16" document={document} />);
+    fireEvent.click(screen.getByRole("button", { name: "Preview" }));
+    fireEvent.click(screen.getByRole("button", { name: "Expand editor" }));
+    expect(screen.queryByRole("textbox", { name: "Daily Markdown" })).toBeNull();
+    fireEvent(screen.getByRole("dialog"), new Event("cancel", { cancelable: true }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(screen.getByRole("heading", { name: "Work log" })).toBeTruthy();
   });
 
   it("uses a refreshed revision after group frontmatter changes", async () => {

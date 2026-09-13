@@ -107,6 +107,24 @@ describe("calendar routes", () => {
     });
   });
 
+  it("keeps day details and month summaries in sync after creation and deletion", async () => {
+    const group = await createGroup("Thesis", "#d1495b");
+    const milestone = await createMilestone(group.id, "Draft", "2026-06-16");
+    const dayDetails = () => inject({ method: "GET", url: "/api/v1/daily-notes/2026-06-16" });
+    expect((await dayDetails()).json().dueMilestones.map(({ id }: { id: string }) => id)).toEqual([milestone.id]);
+
+    const deleted = await inject({
+      method: "DELETE",
+      url: `/api/v1/milestones/${milestone.id}`,
+      payload: { expectedVersion: milestone.version },
+    });
+    expect(deleted.statusCode).toBe(200);
+    expect((await dayDetails()).json().dueMilestones).toEqual([]);
+    const month = await inject({ method: "GET", url: "/api/v1/calendar/2026/6" });
+    expect(month.json().days.find(({ date }: { date: string }) => date === "2026-06-16"))
+      .toMatchObject({ milestoneCount: 0, firstMilestoneTitle: null });
+  });
+
   it("supports Sunday-first display ranges", async () => {
     const response = await inject({
       method: "GET",

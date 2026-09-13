@@ -15,6 +15,8 @@ interface DailyEditorProps {
   document: DocumentPayload | NewDailyDocumentDraft;
 }
 
+type EditorMode = "edit" | "split" | "preview";
+
 type SaveStatus = "Saved" | "Saving..." | "Unsaved" | "Save failed";
 
 function bodyFromMarkdown(markdown: string): string {
@@ -46,7 +48,11 @@ export function DailyEditor({ date, document }: DailyEditorProps) {
   const save = useSaveDailyDocument(date);
   const startingBody = initialBody(date, document);
   const [body, setBody] = useState(startingBody);
-  const [mode, setMode] = useState<"edit" | "preview">("edit");
+  const [mode, setMode] = useState<EditorMode>("edit");
+  const [expanded, setExpanded] = useState(false);
+  const inlineMode = useRef<EditorMode>("edit");
+  const dialog = useRef<HTMLDialogElement>(null);
+  const expandButton = useRef<HTMLButtonElement>(null);
   const [status, setStatus] = useState<SaveStatus>(
     window.localStorage.getItem(draftKey(date)) ? "Unsaved" : "Saved",
   );
@@ -99,48 +105,121 @@ export function DailyEditor({ date, document }: DailyEditorProps) {
     return () => window.clearTimeout(timeout);
   }, [body, date, save.mutateAsync]);
 
+  useEffect(() => {
+    const element = dialog.current;
+    if (!element) return;
+    if (expanded) {
+      element.showModal();
+    } else if (element.open) {
+      element.close();
+      expandButton.current?.focus();
+    }
+  }, [expanded]);
+
   function updateBody(markdown: string) {
     setBody(markdown);
     window.localStorage.setItem(draftKey(date), markdown);
     setStatus("Unsaved");
   }
 
-  return (
-    <section className="dailyEditor">
+  function closeExpanded() {
+    setMode(inlineMode.current);
+    setExpanded(false);
+  }
+
+  const editor = (
+    <div className="dailyEditor" data-mode={mode}>
       <div className="dailyEditorToolbar">
         <SegmentedControl
           activeId={mode}
           label="Document mode"
-          onChange={(id) => setMode(id as "edit" | "preview")}
+          onChange={(id) => setMode(id as EditorMode)}
           segments={[
             { id: "edit", label: "Edit" },
+            ...(expanded ? [{ id: "split", label: "Split" }] : []),
             { id: "preview", label: "Preview" },
           ]}
         />
-        <span className="saveStatus" data-status={status}>
+        <span aria-live="polite" className="saveStatus" data-status={status}>
           {status}
         </span>
       </div>
-      {mode === "edit" ? (
-        <textarea
-          aria-label="Daily Markdown"
-          className="dailyMarkdownInput"
-          onChange={(event) => updateBody(event.target.value)}
-          placeholder="Record what moved these projects forward..."
-          spellCheck
-          value={body}
-        />
-      ) : (
-        <div className="markdownPreview">
-          {body.trim() ? (
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {body}
-            </ReactMarkdown>
-          ) : (
-            <p className="markdownEmpty">Nothing written yet.</p>
-          )}
-        </div>
-      )}
+      <div className="dailyEditorContent">
+        {mode !== "preview" ? (
+          <textarea
+            aria-label="Daily Markdown"
+            className="dailyMarkdownInput"
+            onChange={(event) => updateBody(event.target.value)}
+            placeholder="Record what moved these projects forward..."
+            spellCheck
+            value={body}
+          />
+        ) : null}
+        {mode !== "edit" ? (
+          <div aria-label="Markdown preview" className="markdownPreview" role="region">
+            {body.trim() ? (
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {body}
+              </ReactMarkdown>
+            ) : (
+              <p className="markdownEmpty">Nothing written yet.</p>
+            )}
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+
+  return (
+    <section className="dailyEditorSection">
+      {!expanded ? (
+        <>
+          <div className="dailyEditorHeading">
+            <h3>Daily Markdown</h3>
+            <button
+              className="dailyEditorAction"
+              onClick={() => {
+                inlineMode.current = mode;
+                if (mode === "edit") setMode("split");
+                setExpanded(true);
+              }}
+              ref={expandButton}
+              type="button"
+            >
+              Expand editor
+            </button>
+          </div>
+          {editor}
+        </>
+      ) : null}
+      <dialog
+        aria-label={`Daily note for ${date}`}
+        className="dailyEditorDialog"
+        onCancel={(event) => {
+          event.preventDefault();
+          closeExpanded();
+        }}
+        ref={dialog}
+      >
+        {expanded ? (
+          <>
+            <header className="dailyEditorDialogHeader">
+              <div>
+                <span className="eyebrow">Daily note</span>
+                <h2>{date}</h2>
+              </div>
+              <button
+                className="dailyEditorAction"
+                onClick={closeExpanded}
+                type="button"
+              >
+                Close expanded editor
+              </button>
+            </header>
+            {editor}
+          </>
+        ) : null}
+      </dialog>
     </section>
   );
 }

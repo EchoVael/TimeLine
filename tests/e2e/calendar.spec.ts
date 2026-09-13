@@ -155,3 +155,60 @@ test("switches calendar month and year directly", async ({
     path: testInfo.outputPath(`calendar-period-${testInfo.project.name}.png`),
   });
 });
+
+test("expands daily Markdown with live and preview-only modes", async ({ page }, testInfo) => {
+  const mobile = testInfo.project.name === "mobile";
+  const date = mobile ? "2026-06-19" : "2026-06-18";
+  await page.clock.setFixedTime(new Date("2026-06-16T12:00:00+08:00"));
+  await page.goto("/#token=e2e-token");
+  await openCalendar(page, mobile);
+  await page.getByRole("button", { name: `Open ${date}` }).click();
+  const expand = page.getByRole("button", { name: "Expand editor" });
+  await expand.click();
+  const dialog = page.getByRole("dialog", { name: `Daily note for ${date}` });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Split", exact: true })).toHaveAttribute("aria-pressed", "true");
+
+  const editor = dialog.getByRole("textbox", { name: "Daily Markdown" });
+  const markdown = "# Project journal\n\nA quiet space to plan and reflect.\n\n## Today\n\n- [x] Review the outline\n- [ ] Write the next section\n\n> Keep the next step small.\n\n| Focus | Next step |\n| --- | --- |\n| Research | Compare findings |\n| Writing | Finish the introduction |";
+  await editor.fill(markdown);
+  await expect(dialog.getByRole("heading", { name: "Project journal" })).toBeVisible();
+  const preview = dialog.getByRole("region", { name: "Markdown preview" });
+  const inputBox = await editor.boundingBox();
+  const previewBox = await preview.boundingBox();
+  expect(inputBox).not.toBeNull();
+  expect(previewBox).not.toBeNull();
+  if (mobile) {
+    expect(previewBox!.y).toBeGreaterThan(inputBox!.y);
+  } else {
+    expect(previewBox!.x).toBeGreaterThan(inputBox!.x);
+  }
+  await expect(dialog.getByText("Saved", { exact: true })).toBeVisible();
+  await page.screenshot({ path: testInfo.outputPath("expanded-split.png") });
+
+  await dialog.getByRole("button", { name: "Preview", exact: true }).click();
+  await expect(editor).toHaveCount(0);
+  await expect(dialog.getByRole("heading", { name: "Project journal" })).toBeVisible();
+  expect(await dialog.evaluate((element) => element.scrollWidth - element.clientWidth)).toBeLessThanOrEqual(1);
+  await page.screenshot({ path: testInfo.outputPath("expanded-preview.png") });
+
+  // The modal makes background controls inert to programmatic focus.
+  await dialog.getByRole("button", { name: "Preview", exact: true }).focus();
+  await page.getByRole("button", { name: "Timeline", exact: true, includeHidden: true }).first().evaluate((element) => element.focus());
+  expect(await dialog.evaluate((element) => element.contains(document.activeElement))).toBe(true);
+  await page.keyboard.press("Escape");
+  await expect(dialog).not.toBeVisible();
+  await expect(expand).toBeFocused();
+  await expect(page.getByRole("textbox", { name: "Daily Markdown" })).toHaveValue(markdown);
+  await expect(page.getByRole("region", { name: "Markdown preview" })).toHaveCount(0);
+
+  await expand.click();
+  await dialog.getByRole("button", { name: "Edit", exact: true }).click();
+  await expect(editor).toHaveValue(markdown);
+  await expect(preview).toHaveCount(0);
+  await dialog.getByRole("button", { name: "Close expanded editor" }).click();
+  await page.reload();
+  await openCalendar(page, mobile);
+  await page.getByRole("button", { name: `Open ${date}` }).click();
+  await expect(page.getByRole("textbox", { name: "Daily Markdown" })).toHaveValue(markdown);
+});
