@@ -89,7 +89,7 @@ describe("TimelineView", () => {
     reorderMilestones.mockReset();
   });
 
-  it("shows compact future rows and reveals hidden states on request", async () => {
+  it("keeps past and completed milestones around today", async () => {
     const user = userEvent.setup();
     const onSelect = vi.fn();
     render(
@@ -103,33 +103,53 @@ describe("TimelineView", () => {
 
     expect(screen.getByText("Future draft")).toBeTruthy();
     expect(screen.getByText("Final submission")).toBeTruthy();
-    expect(screen.getAllByText("Thesis")).toHaveLength(2);
-    expect(
-      screen
-        .getAllByRole("separator", { name: /Year/ })
-        .map((marker) => marker.getAttribute("aria-label")),
-    ).toEqual(["Year 2026", "Year 2027"]);
-    expect(screen.getByText("Jun 30")).toBeTruthy();
-    expect(screen.getByText("Jan 3")).toBeTruthy();
-    expect(screen.queryByText("Past draft")).toBeNull();
-    expect(screen.queryByText("Completed review")).toBeNull();
-
-    await user.click(screen.getByRole("checkbox", { name: "Show past" }));
+    expect(screen.getAllByText("Thesis")).toHaveLength(4);
     expect(screen.getByText("Past draft")).toBeTruthy();
+    expect(screen.getByText("Completed review")).toBeTruthy();
     expect(screen.getByLabelText("Overdue")).toBeTruthy();
+    expect(screen.queryByRole("checkbox", { name: "Show past" })).toBeNull();
     expect(
-      screen
-        .getAllByRole("separator", { name: /Year/ })
+      screen.getAllByRole("separator", { name: /Year/ })
         .map((marker) => marker.getAttribute("aria-label")),
     ).toEqual(["Year 2025", "Year 2026", "Year 2027"]);
-
-    await user.click(screen.getByRole("checkbox", { name: "Show completed" }));
-    expect(screen.getByText("Completed review")).toBeTruthy();
+    const past = screen.getByText("Past draft");
+    const today = screen.getByText("Today");
+    const future = screen.getByText("Future draft");
+    expect(past.compareDocumentPosition(today) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(today.compareDocumentPosition(future) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 
     await user.click(
       screen.getByRole("button", { name: "Open Future draft" }),
     );
     expect(onSelect).toHaveBeenCalledWith("future");
+  });
+
+  it.each([
+    { height: 500, content: 1500, marker: 600, expected: 580 },
+    { height: 500, content: 900, marker: 600, expected: 400 },
+    { height: 1000, content: 900, marker: 600, expected: 0 },
+  ])("restores layout with viewport $height and content $content", async ({
+    height, content, marker, expected,
+  }) => {
+    const user = userEvent.setup();
+    const { container } = render(
+      <TimelineView groups={groups} onSelect={vi.fn()} today="2026-06-15"
+        visibleGroupIds={["group-thesis"]} />,
+    );
+    const canvas = container.querySelector(".timelineCanvas") as HTMLDivElement;
+    const today = container.querySelector(".todayMarker") as HTMLDivElement;
+    Object.defineProperty(canvas, "clientHeight", { value: height });
+    Object.defineProperty(canvas, "scrollHeight", { value: content });
+    vi.spyOn(canvas, "getBoundingClientRect").mockImplementation(() => ({ top: 100 } as DOMRect));
+    vi.spyOn(today, "getBoundingClientRect").mockImplementation(
+      () => ({ top: 100 + marker - canvas.scrollTop } as DOMRect),
+    );
+    canvas.scrollTop = 123;
+    await user.click(screen.getByRole("button", { name: "Back to today" }));
+    expect(canvas.scrollTop).toBe(expected);
+    canvas.scrollTop = 50;
+    await user.click(screen.getByRole("button", { name: "Back to today" }));
+    expect(canvas.scrollTop).toBe(expected);
   });
 
   it("prefills a new milestone with today and the first visible group", async () => {

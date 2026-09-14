@@ -2,39 +2,15 @@ import { Plus } from "lucide-react";
 
 import { IconButton } from "../components/IconButton.js";
 
-interface TimelineFiltersProps {
+export function TimelineFilters({ onNew, onToday }: {
   onNew: () => void;
-  onShowCompletedChange: (checked: boolean) => void;
-  onShowPastChange: (checked: boolean) => void;
-  showCompleted: boolean;
-  showPast: boolean;
-}
-
-export function TimelineFilters({
-  onNew,
-  onShowCompletedChange,
-  onShowPastChange,
-  showCompleted,
-  showPast,
-}: TimelineFiltersProps) {
+  onToday: () => void;
+}) {
   return (
     <div className="timelineFilters">
-      <label>
-        <input
-          checked={showPast}
-          onChange={(event) => onShowPastChange(event.target.checked)}
-          type="checkbox"
-        />
-        <span>Show past</span>
-      </label>
-      <label>
-        <input
-          checked={showCompleted}
-          onChange={(event) => onShowCompletedChange(event.target.checked)}
-          type="checkbox"
-        />
-        <span>Show completed</span>
-      </label>
+      <button className="textButton" onClick={onToday} type="button">
+        Back to today
+      </button>
       <IconButton icon={Plus} label="New milestone" onClick={onNew} />
     </div>
   );

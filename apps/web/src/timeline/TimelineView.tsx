@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   DndContext,
   PointerSensor,
@@ -46,8 +46,9 @@ export function TimelineView({
     includePast: true,
   });
   const reorder = useReorderMilestones();
-  const [showPast, setShowPast] = useState(false);
-  const [showCompleted, setShowCompleted] = useState(false);
+  const canvasRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const todayRef = useRef<HTMLDivElement>(null);
   const [creating, setCreating] = useState(false);
   const allItems = milestones.data?.items ?? [];
   const visibleGroups = groups.filter(({ id }) =>
@@ -59,12 +60,45 @@ export function TimelineView({
       allItems.filter(
         (milestone) =>
           visibleGroupIds.includes(milestone.groupId) &&
-          (showPast || milestone.date >= today) &&
-          (showCompleted || milestone.status !== "completed") &&
           milestone.status !== "cancelled",
       ),
-    [allItems, showCompleted, showPast, today, visibleGroupIds],
+    [allItems, visibleGroupIds],
   );
+  const entries: { date: LocalDate; milestone?: Milestone }[] = [
+    ...visibleItems
+      .filter((item) => item.date < today)
+      .map((milestone) => ({ date: milestone.date, milestone })),
+    { date: today },
+    ...visibleItems
+      .filter((item) => item.date >= today)
+      .map((milestone) => ({ date: milestone.date, milestone })),
+  ];
+
+  function positionToday() {
+    const canvas = canvasRef.current;
+    const marker = todayRef.current;
+    if (!canvas || !marker || !canvas.clientHeight) return;
+    const markerTop = marker.getBoundingClientRect().top
+      - canvas.getBoundingClientRect().top + canvas.scrollTop;
+    // Spare space below today is filled by recent history above it.
+    canvas.scrollTop = Math.max(
+      0,
+      Math.min(markerTop - 20, canvas.scrollHeight - canvas.clientHeight),
+    );
+  }
+
+  useLayoutEffect(() => {
+    const canvas = canvasRef.current;
+    const list = listRef.current;
+    if (!canvas || !list) return;
+    positionToday();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(positionToday);
+    observer.observe(canvas);
+    observer.observe(list);
+    return () => observer.disconnect();
+  }, [visibleItems, today, milestones.isLoading]);
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 5 },
@@ -97,58 +131,53 @@ export function TimelineView({
     <div className="timelineView">
       <TimelineFilters
         onNew={() => setCreating(true)}
-        onShowCompletedChange={setShowCompleted}
-        onShowPastChange={setShowPast}
-        showCompleted={showCompleted}
-        showPast={showPast}
+        onToday={positionToday}
       />
-      <div className="timelineCanvas">
-        <div className="todayMarker">
-          <span>Today</span>
-        </div>
+      <div className="timelineCanvas" ref={canvasRef}>
         {milestones.isLoading ? (
           <div className="emptyState emptyState--large">
             <p>Loading milestones...</p>
           </div>
-        ) : visibleItems.length ? (
+        ) : (
           <DndContext onDragEnd={handleDragEnd} sensors={sensors}>
             <SortableContext
               items={visibleItems.map(({ id }) => id)}
               strategy={verticalListSortingStrategy}
             >
-              <div className="timelineList">
-                {visibleItems.map((milestone, index) => {
-                  const group = groupMap.get(milestone.groupId);
-                  if (!group) {
-                    return null;
-                  }
-                  const previousDate = visibleItems[index - 1]?.date;
+              <div className="timelineList" ref={listRef}>
+                {entries.map(({ date, milestone }, index) => {
+                  const group = milestone
+                    ? groupMap.get(milestone.groupId)
+                    : undefined;
+                  const previousDate = entries[index - 1]?.date;
                   return (
-                    <Fragment key={milestone.id}>
-                      {startsTimelineYear(
-                        milestone.date,
-                        previousDate,
-                      ) ? (
-                        <TimelineYearMarker
-                          year={timelineYear(milestone.date)}
+                    <Fragment key={milestone?.id ?? "today"}>
+                      {startsTimelineYear(date, previousDate) ? (
+                        <TimelineYearMarker year={timelineYear(date)} />
+                      ) : null}
+                      {!milestone ? (
+                        <div className="todayMarker" ref={todayRef}>
+                          <span>Today</span>
+                        </div>
+                      ) : group ? (
+                        <TimelineRow
+                          group={group}
+                          milestone={milestone}
+                          onSelect={() => onSelect(milestone.id)}
                         />
                       ) : null}
-                      <TimelineRow
-                        group={group}
-                        milestone={milestone}
-                        onSelect={() => onSelect(milestone.id)}
-                      />
                     </Fragment>
                   );
                 })}
+                {!visibleItems.length ? (
+                  <div className="emptyState emptyState--large">
+                    <CalendarDays aria-hidden size={22} />
+                    <p>No milestones in the selected projects.</p>
+                  </div>
+                ) : null}
               </div>
             </SortableContext>
           </DndContext>
-        ) : (
-          <div className="emptyState emptyState--large">
-            <CalendarDays aria-hidden size={22} />
-            <p>No milestones match the current filters.</p>
-          </div>
         )}
       </div>
       {creating ? (

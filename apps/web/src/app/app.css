@@ -447,16 +447,12 @@ textarea:focus-visible {
   background: var(--surface);
 }
 
-.timelineFilters label {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--muted);
-  font-size: 12px;
-}
-
 .timelineFilters .iconButton {
   margin-left: auto;
+}
+
+.timelineFilters .textButton {
+  font-size: 12px;
 }
 
 .timelineList {
@@ -994,6 +990,7 @@ textarea:focus-visible {
 }
 
 .todayMarker {
+  min-height: 30px;
   display: flex;
   align-items: center;
   gap: 8px;
